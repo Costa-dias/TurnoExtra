@@ -121,7 +121,7 @@ export function RepeatModal({ open, onClose, shift, existing, onConfirm }: Repea
             id="repeat-interval"
             value={interval}
             onChange={(e) => setIntervalDays(Number(e.target.value))}
-            className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-teal-500"
+            className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-hidden dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-teal-500"
           >
             {INTERVALS.map((item) => (
               <option key={item.days} value={item.days}>

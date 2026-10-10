@@ -35,7 +35,7 @@ const labelCls = 'text-sm font-medium text-slate-700 dark:text-slate-300';
 const boxCls =
   'rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-700 dark:bg-slate-800/50';
 const selectCls =
-  'w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/40 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-teal-500 dark:focus:ring-teal-500/50';
+  'w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-slate-900 focus:border-teal-600 focus:outline-hidden focus:ring-2 focus:ring-teal-600/40 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-teal-500 dark:focus:ring-teal-500/50';
 
 function toNumber(text: string): number {
   const n = parseFloat(text);

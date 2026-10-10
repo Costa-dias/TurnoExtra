@@ -149,7 +149,7 @@ export function LockScreen({
         >
           <button
             onClick={onToggleTheme}
-            className="rounded-xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 p-2 text-slate-700 dark:text-slate-300 shadow-sm transition hover:bg-slate-100 dark:hover:bg-slate-800"
+            className="rounded-xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 p-2 text-slate-700 dark:text-slate-300 shadow-xs transition hover:bg-slate-100 dark:hover:bg-slate-800"
             aria-label="Alternar tema"
           >
             {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
@@ -160,7 +160,7 @@ export function LockScreen({
       <div className="relative z-10 flex flex-col items-center w-full max-w-xs">
         {/* Header */}
         <div className="mb-8 flex flex-col items-center gap-3 text-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-teal-600/10 dark:bg-teal-600/20 border border-teal-600/30 text-teal-700 dark:text-teal-400 shadow-sm">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-teal-600/10 dark:bg-teal-600/20 border border-teal-600/30 text-teal-700 dark:text-teal-400 shadow-xs">
             <Shield size={32} />
           </div>
           <h1 className="text-2xl font-black !text-slate-900 dark:!text-white tracking-tight">TurnoExtra</h1>
@@ -215,7 +215,7 @@ export function LockScreen({
               onClick={() => handleDigit(d)}
               disabled={isLocked}
               aria-label={`Dígito ${d}`}
-              className="flex h-16 items-center justify-center rounded-2xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900/90 text-2xl font-bold !text-slate-900 dark:!text-white shadow-sm transition-all hover:border-teal-500 dark:hover:border-teal-500 hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 disabled:opacity-40"
+              className="flex h-16 items-center justify-center rounded-2xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900/90 text-2xl font-bold !text-slate-900 dark:!text-white shadow-xs transition-all hover:border-teal-500 dark:hover:border-teal-500 hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 disabled:opacity-40"
             >
               {d}
             </button>
@@ -249,7 +249,7 @@ export function LockScreen({
             onClick={() => handleDigit('0')}
             disabled={isLocked}
             aria-label="Dígito 0"
-            className="flex h-16 items-center justify-center rounded-2xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900/90 text-2xl font-bold !text-slate-900 dark:!text-white shadow-sm transition-all hover:border-teal-500 dark:hover:border-teal-500 hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 disabled:opacity-40"
+            className="flex h-16 items-center justify-center rounded-2xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900/90 text-2xl font-bold !text-slate-900 dark:!text-white shadow-xs transition-all hover:border-teal-500 dark:hover:border-teal-500 hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 disabled:opacity-40"
           >
             0
           </button>
@@ -258,7 +258,7 @@ export function LockScreen({
             onClick={handleBackspace}
             disabled={isLocked}
             aria-label="Apagar último dígito"
-            className="flex h-16 items-center justify-center rounded-2xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900/90 !text-slate-900 dark:!text-slate-300 shadow-sm transition-all hover:bg-slate-100 dark:hover:bg-slate-800 hover:!text-slate-900 dark:hover:!text-white active:scale-95 disabled:opacity-40"
+            className="flex h-16 items-center justify-center rounded-2xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900/90 !text-slate-900 dark:!text-slate-300 shadow-xs transition-all hover:bg-slate-100 dark:hover:bg-slate-800 hover:!text-slate-900 dark:hover:!text-white active:scale-95 disabled:opacity-40"
           >
             <Delete size={22} />
           </button>

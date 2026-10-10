@@ -26,7 +26,7 @@ const TYPE_OPTIONS: ServiceType[] = ['plantao', 'servico', 'hora_extra', 'contra
 
 const labelCls = 'mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300';
 const fieldCls =
-  'w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-slate-900 transition-colors focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/40 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-teal-500 dark:focus:ring-teal-500/50';
+  'w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-slate-900 transition-colors focus:border-teal-600 focus:outline-hidden focus:ring-2 focus:ring-teal-600/40 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-teal-500 dark:focus:ring-teal-500/50';
 const summaryRow =
   'flex items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-800/50 print:border-slate-300 print:bg-slate-50';
 const mainText = 'text-slate-900 dark:text-slate-100 print:text-slate-900';
@@ -160,7 +160,7 @@ export function ReportView({ open, onClose, shifts }: ReportViewProps) {
       </div>
 
       {/* Cabeçalho */}
-      <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200 bg-white/95 px-4 py-3 backdrop-blur dark:border-slate-800 dark:bg-slate-950/95 print:hidden">
+      <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200 bg-white/95 px-4 py-3 backdrop-blur-sm dark:border-slate-800 dark:bg-slate-950/95 print:hidden">
         <div className="flex items-center gap-2.5">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-teal-600/30 bg-teal-600/10 dark:bg-teal-600/20">
             <FileText size={20} className="text-teal-700 dark:text-teal-400" />
@@ -260,7 +260,7 @@ export function ReportView({ open, onClose, shifts }: ReportViewProps) {
                   setDropdownOpen(!dropdownOpen);
                   setSearchQuery('');
                 }}
-                className="flex w-full items-center justify-between rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-left transition-colors hover:border-slate-400 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/40 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-slate-600 dark:focus:border-teal-500 dark:focus:ring-teal-500/50"
+                className="flex w-full items-center justify-between rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-left transition-colors hover:border-slate-400 focus:border-teal-600 focus:outline-hidden focus:ring-2 focus:ring-teal-600/40 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-slate-600 dark:focus:border-teal-500 dark:focus:ring-teal-500/50"
               >
                 <span className="truncate text-slate-900 dark:text-slate-100">{selectedLabel}</span>
                 <ChevronDown
@@ -280,7 +280,7 @@ export function ReportView({ open, onClose, shifts }: ReportViewProps) {
                         placeholder="Buscar empresa..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-500 focus:border-teal-600 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-teal-500"
+                        className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-500 focus:border-teal-600 focus:outline-hidden dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-teal-500"
                       />
                     </div>
                   </div>

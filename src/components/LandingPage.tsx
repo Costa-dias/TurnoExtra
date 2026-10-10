@@ -118,7 +118,7 @@ export function LandingPage({ onEnter, theme, onToggleTheme }: LandingPageProps)
       <main className="relative z-10">
         {/* Hero */}
         <section className="mx-auto flex max-w-5xl flex-col items-center px-6 pb-20 pt-12 text-center sm:pt-16">
-          <h1 className="max-w-3xl text-4xl font-extrabold leading-[1.1] tracking-tight sm:text-5xl md:text-6xl">
+          <h1 className="max-w-3xl text-4xl font-extrabold leading-[1.1] tracking-tight sm:text-5xl sm:leading-none md:text-6xl">
             Organize seus plantões, serviços e horas extras em um só lugar.
           </h1>
           <p className="mt-5 text-lg font-medium text-slate-700 dark:text-slate-300 sm:text-xl">
@@ -145,11 +145,11 @@ export function LandingPage({ onEnter, theme, onToggleTheme }: LandingPageProps)
           <div className="relative mt-14 w-full max-w-md">
             <div
               aria-hidden="true"
-              className="absolute -left-8 -top-8 h-28 w-28 rounded-full bg-gradient-to-br from-teal-300 to-teal-600 shadow-xl shadow-teal-600/30 sm:-left-12 sm:h-40 sm:w-40 dark:from-teal-400 dark:to-teal-700"
+              className="absolute -left-8 -top-8 h-28 w-28 rounded-full bg-linear-to-br/srgb from-teal-300 to-teal-600 shadow-xl shadow-teal-600/30 sm:-left-12 sm:h-40 sm:w-40 dark:from-teal-400 dark:to-teal-700"
             />
             <div
               aria-hidden="true"
-              className="absolute -bottom-8 -right-6 h-24 w-24 rounded-full bg-gradient-to-br from-emerald-300 to-emerald-600 shadow-xl shadow-emerald-600/30 sm:-right-10 sm:h-36 sm:w-36 dark:from-emerald-400 dark:to-emerald-700"
+              className="absolute -bottom-8 -right-6 h-24 w-24 rounded-full bg-linear-to-br/srgb from-emerald-300 to-emerald-600 shadow-xl shadow-emerald-600/30 sm:-right-10 sm:h-36 sm:w-36 dark:from-emerald-400 dark:to-emerald-700"
             />
 
             <div className="relative rounded-3xl border border-white/70 bg-white/30 p-6 shadow-2xl shadow-teal-900/15 ring-1 ring-inset ring-white/50 backdrop-blur-xl dark:border-white/10 dark:bg-white/5 dark:ring-white/5">

@@ -13,7 +13,7 @@ export function Toggle({ checked, onChange, label }: ToggleProps) {
       aria-checked={checked}
       aria-label={label}
       onClick={() => onChange(!checked)}
-      className="inline-flex items-center rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-600/60"
+      className="inline-flex items-center rounded-full focus:outline-hidden focus-visible:ring-2 focus-visible:ring-teal-600/60"
     >
       <span
         className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ${
@@ -21,7 +21,7 @@ export function Toggle({ checked, onChange, label }: ToggleProps) {
         }`}
       >
         <span
-          className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform duration-200 ${
+          className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-transform duration-200 ${
             checked ? 'translate-x-5' : 'translate-x-1'
           }`}
         />

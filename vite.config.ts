@@ -1,5 +1,6 @@
 import { defineConfig, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import { fileURLToPath, URL } from 'node:url';
 import { randomBytes } from 'node:crypto';
@@ -47,6 +48,7 @@ function devCspPlugin(): Plugin {
 export default defineConfig(({ command }) => ({
   plugins: [
     react(),
+    tailwindcss(),
     devCspPlugin(),
     VitePWA({
       registerType: 'autoUpdate',

@@ -92,7 +92,7 @@ export function Calendar({
                       e.stopPropagation();
                       onSelectShift(shift);
                     }}
-                    className="cursor-pointer rounded-md px-1.5 py-1 text-[10px] leading-tight transition-all hover:scale-[1.02] sm:text-xs"
+                    className="cursor-pointer rounded-md px-1.5 py-1 text-[10px] leading-tight transition-all hover:scale-[1.02] sm:text-xs sm:leading-4"
                     style={{
                       backgroundColor: `${shift.color}30`,
                       borderLeft: `3px solid ${shift.color}`,
