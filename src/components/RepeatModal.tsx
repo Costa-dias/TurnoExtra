@@ -13,7 +13,7 @@ interface RepeatModalProps {
   onClose: () => void;
   shift: Shift | null;
   existing: Shift[];
-  onConfirm: (shifts: NewShift[]) => void;
+  onConfirm: (shifts: NewShift[]) => Promise<boolean>;
 }
 
 const INTERVALS = [
@@ -50,14 +50,13 @@ export function RepeatModal({ open, onClose, shift, existing, onConfirm }: Repea
     if (!shift || count === 0) return { toCreate, skipped };
 
     // Copia o serviço, mas não o id, as datas de controle, o pagamento nem o fim do contrato
-    const {
-      id: _id,
-      createdAt: _created,
-      updatedAt: _updated,
-      paymentDate: _payment,
-      endDate: _end,
-      ...base
-    } = shift;
+    const base: NewShift = {
+      location: shift.location, color: shift.color, date: shift.date,
+      startTime: shift.startTime, endTime: shift.endTime,
+      value: shift.value, paid: false, notes: shift.notes,
+      type: shift.type, hasTime: shift.hasTime, billingUnit: shift.billingUnit,
+      unitValue: shift.unitValue, quantity: shift.quantity,
+    };
 
     for (let i = 1; i <= count; i++) {
       const date = addDays(shift.date, interval * i);
@@ -93,8 +92,8 @@ export function RepeatModal({ open, onClose, shift, existing, onConfirm }: Repea
           <Button
             variant="primary"
             disabled={plan.toCreate.length === 0}
-            onClick={() => {
-              onConfirm(plan.toCreate);
+            onClick={async () => {
+              if (!(await onConfirm(plan.toCreate))) return;
               onClose();
             }}
           >

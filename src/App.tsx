@@ -46,7 +46,6 @@ function App() {
     pin,
     error,
     saveError,
-    clearSaveError,
     lockedSeconds,
     handleSetupPin,
     handleUnlock,
@@ -92,9 +91,8 @@ function App() {
   useEffect(() => {
     if (saveError) {
       showToast(saveError, 'error');
-      clearSaveError();
     }
-  }, [saveError, showToast, clearSaveError]);
+  }, [saveError, showToast]);
 
   // Confere se está na hora de lembrar do backup
   useEffect(() => {
@@ -153,50 +151,55 @@ function App() {
   }, [selectedDate, month, year]);
 
   const handleSaveShift = useCallback(
-    (shiftData: Omit<Shift, 'id' | 'createdAt' | 'updatedAt'>) => {
-      addShift(shiftData);
+    async (shiftData: Omit<Shift, 'id' | 'createdAt' | 'updatedAt'>) => {
+      if (!(await addShift(shiftData))) return false;
       showToast('Serviço adicionado.', 'success');
+      return true;
     },
     [addShift, showToast]
   );
 
   const handleUpdateShift = useCallback(
-    (id: string, shiftData: Partial<Shift>) => {
-      updateShift(id, shiftData);
+    async (id: string, shiftData: Partial<Shift>) => {
+      if (!(await updateShift(id, shiftData))) return false;
       showToast('Serviço atualizado.', 'success');
+      return true;
     },
     [updateShift, showToast]
   );
 
   const handleDeleteShift = useCallback(
-    (id: string) => {
-      deleteShift(id);
+    async (id: string) => {
+      if (!(await deleteShift(id))) return false;
       showToast('Serviço excluído.', 'info');
+      return true;
     },
     [deleteShift, showToast]
   );
 
   const handleConfirmRepeat = useCallback(
-    (list: Array<Omit<Shift, 'id' | 'createdAt' | 'updatedAt'>>) => {
-      addShifts(list);
+    async (list: Array<Omit<Shift, 'id' | 'createdAt' | 'updatedAt'>>) => {
+      if (!(await addShifts(list))) return false;
       showToast(`${list.length} serviços criados.`, 'success');
+      return true;
     },
     [addShifts, showToast]
   );
 
   const handleSaveTemplate = useCallback(
-    (tplData: Parameters<typeof addTemplate>[0]) => {
-      addTemplate(tplData);
+    async (tplData: Parameters<typeof addTemplate>[0]) => {
+      if (!(await addTemplate(tplData))) return false;
       showToast('Modelo salvo.', 'success');
+      return true;
     },
     [addTemplate, showToast]
   );
 
   // Cria um serviço a partir de um modelo, no dia selecionado
   const handleUseTemplate = useCallback(
-    (tpl: ShiftTemplate) => {
+    async (tpl: ShiftTemplate) => {
       const date = selectedDate ?? toISODate(new Date());
-      addShift({
+      const saved = await addShift({
         type: 'plantao',
         location: tpl.location,
         color: tpl.color,
@@ -208,18 +211,19 @@ function App() {
         paid: false,
         notes: tpl.notes,
       });
+      if (!saved) return false;
       setTemplateModalOpen(false);
       showToast(`Serviço criado em ${formatDateBR(date)}.`, 'success');
+      return true;
     },
     [selectedDate, addShift, showToast]
   );
 
   const handleImported = useCallback(
-    (imported: AppData) => {
-      replaceData(imported);
-      showToast('Dados restaurados do backup.', 'success');
+    async (imported: AppData) => {
+      return replaceData(imported);
     },
-    [replaceData, showToast]
+    [replaceData]
   );
 
   const handleSettingsPinReset = useCallback(() => {
@@ -285,6 +289,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 pb-24 text-slate-900 transition-colors dark:bg-slate-950 dark:text-slate-100">
+      {saveError && <div role="alert" className="mx-auto max-w-4xl rounded-xl border border-red-400 bg-red-50 p-4 text-red-900 dark:bg-red-950 dark:text-red-100">Alterações não salvas: {saveError}</div>}
       {/* Header */}
       <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur-lg transition-colors dark:border-slate-800 dark:bg-slate-950/90">
         <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3">
@@ -529,9 +534,8 @@ function App() {
         open={templateModalOpen}
         onClose={() => setTemplateModalOpen(false)}
         templates={data.templates}
-        selectedDate={selectedDate ?? toISODate(new Date())}
         onDelete={deleteTemplate}
-        onCreate={handleSaveTemplate}
+        onAddNew={() => { setTemplateModalOpen(false); handleAddShift(); }}
         onUse={handleUseTemplate}
       />
 

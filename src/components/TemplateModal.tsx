@@ -10,6 +10,7 @@ interface TemplateModalProps {
   templates: ShiftTemplate[];
   onDelete: (id: string) => void;
   onAddNew: () => void;
+  onUse: (template: ShiftTemplate) => void;
 }
 
 export function TemplateModal({
@@ -18,6 +19,7 @@ export function TemplateModal({
   templates,
   onDelete,
   onAddNew,
+  onUse,
 }: TemplateModalProps) {
   return (
     <Modal
@@ -67,6 +69,7 @@ export function TemplateModal({
                   {tpl.value > 0 && ` · ${formatCurrency(tpl.value)}`}
                 </p>
               </div>
+              <Button variant="secondary" onClick={() => onUse(tpl)}>Usar</Button>
               <button
                 onClick={() => {
                   if (confirm('Excluir este modelo?')) onDelete(tpl.id);

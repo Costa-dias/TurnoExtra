@@ -31,7 +31,8 @@ export function LockScreen({
 
   useEffect(() => {
     (async () => {
-      setHasPin(await isPinSet());
+      try { setHasPin(await isPinSet()); }
+      catch { setLocalError('O armazenamento local está indisponível. Tente reabrir o aplicativo sem limpar os dados.'); }
     })();
   }, []);
 

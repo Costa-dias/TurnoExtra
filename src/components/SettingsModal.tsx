@@ -35,7 +35,7 @@ interface SettingsModalProps {
   onClose: () => void;
   data: AppData;
   pin: string;
-  onImported: (data: AppData) => void;
+  onImported: (data: AppData) => Promise<boolean>;
   onPinChanged: (newPin: string) => void;
   onPinReset: () => void;
   showToast: (msg: string, type?: 'success' | 'error' | 'info') => void;
@@ -161,7 +161,7 @@ export function SettingsModal({
   const handleImport = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
-      if (!file) return;
+        if (!file || busy) return;
       const clearInput = () => {
         if (fileInputRef.current) fileInputRef.current.value = '';
       };
@@ -170,17 +170,17 @@ export function SettingsModal({
         clearInput();
         return;
       }
-      try {
+        setBusy(true);
+        try {
         const imported = await importBackup(file, pin);
-        onImported(imported);
+        if (!(await onImported(imported))) return;
         showToast('Backup importado com sucesso.', 'success');
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'Erro ao importar.';
         showToast(msg, 'error');
-      }
-      clearInput();
+        } finally { setBusy(false); clearInput(); }
     },
-    [pin, onImported, showToast]
+    [pin, onImported, showToast, busy]
   );
 
   const totalShifts = data.shifts.length;

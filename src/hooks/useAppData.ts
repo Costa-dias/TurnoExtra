@@ -20,6 +20,9 @@ export type AppPhase = 'loading' | 'setup' | 'locked' | 'unlocked';
 export function useAppData() {
   const [phase, setPhase] = useState<AppPhase>('loading');
   const [data, setData] = useState<AppData | null>(null);
+  const dataRef = useRef<AppData | null>(null);
+  dataRef.current = data;
+  const saveSequence = useRef(0);
   const [pin, setPin] = useState<string>('');
   const [error, setError] = useState<string>('');
   const [saveError, setSaveError] = useState<string>('');
@@ -37,8 +40,13 @@ export function useAppData() {
   // Initial check: is PIN set?
   useEffect(() => {
     (async () => {
-      const hasPin = await isPinSet();
-      setPhase(hasPin ? 'locked' : 'setup');
+      try {
+        const hasPin = await isPinSet();
+        setPhase(hasPin ? 'locked' : 'setup');
+      } catch {
+        setError('O armazenamento local está indisponível. Não limpe os dados; tente reabrir o aplicativo.');
+        setPhase('locked');
+      }
     })();
   }, []);
 
@@ -72,19 +80,23 @@ export function useAppData() {
   // Persist data whenever it changes. Se a gravação falhar (ou estiver bloqueada), avisa.
   const persist = useCallback(
     async (newData: AppData, currentPin: string) => {
-      if (!currentPin) return;
+      const sequence = ++saveSequence.current;
+      if (!currentPin) return false;
       if (blockSavesRef.current) {
         setSaveError(
           'Seus dados salvos não puderam ser lidos, então esta alteração não foi gravada. Importe um backup em Configurações.'
         );
-        return;
+        return false;
       }
       try {
         await saveData(newData, currentPin);
-      } catch {
+        if (sequence === saveSequence.current) setSaveError('');
+        return true;
+      } catch (error) {
         setSaveError(
-          'Não foi possível salvar suas alterações. Exporte um backup para não perder dados.'
+          error instanceof Error ? error.message + ' Exporte um backup das alterações pendentes.' : 'Não foi possível salvar suas alterações. Exporte um backup para não perder dados.'
         );
+        return false;
       }
     },
     []
@@ -179,20 +191,20 @@ export function useAppData() {
   // ─── Data mutations ──────────────────────────────────────────
 
   const updateData = useCallback(
-    (updater: (prev: AppData) => AppData) => {
-      setData((prev) => {
-        if (!prev) return prev;
-        const next = updater(prev);
-        persist(next, pin);
-        return next;
-      });
+    async (updater: (prev: AppData) => AppData) => {
+      const prev = dataRef.current;
+      if (!prev) return false;
+      const next = updater(prev);
+      dataRef.current = next;
+      setData(next);
+      return persist(next, pin);
     },
     [pin, persist]
   );
 
   const addShift = useCallback(
     (shiftData: Omit<Shift, 'id' | 'createdAt' | 'updatedAt'>) => {
-      updateData((prev) => ({
+      return updateData((prev) => ({
         ...prev,
         shifts: [...prev.shifts, createShift(shiftData)],
       }));
@@ -203,8 +215,8 @@ export function useAppData() {
   // Adiciona vários serviços de uma vez (um único salvamento)
   const addShifts = useCallback(
     (list: Array<Omit<Shift, 'id' | 'createdAt' | 'updatedAt'>>) => {
-      if (list.length === 0) return;
-      updateData((prev) => ({
+      if (list.length === 0) return Promise.resolve(false);
+      return updateData((prev) => ({
         ...prev,
         shifts: [...prev.shifts, ...list.map((item) => createShift(item))],
       }));
@@ -214,7 +226,7 @@ export function useAppData() {
 
   const updateShift = useCallback(
     (id: string, shiftData: Partial<Shift>) => {
-      updateData((prev) => ({
+      return updateData((prev) => ({
         ...prev,
         shifts: prev.shifts.map((s) =>
           s.id === id ? { ...s, ...shiftData, updatedAt: Date.now() } : s
@@ -226,7 +238,7 @@ export function useAppData() {
 
   const deleteShift = useCallback(
     (id: string) => {
-      updateData((prev) => ({
+      return updateData((prev) => ({
         ...prev,
         shifts: prev.shifts.filter((s) => s.id !== id),
       }));
@@ -236,7 +248,7 @@ export function useAppData() {
 
   const addTemplate = useCallback(
     (tplData: Omit<ShiftTemplate, 'id'>) => {
-      updateData((prev) => ({
+      return updateData((prev) => ({
         ...prev,
         templates: [...prev.templates, createTemplate(tplData)],
       }));
@@ -246,7 +258,7 @@ export function useAppData() {
 
   const deleteTemplate = useCallback(
     (id: string) => {
-      updateData((prev) => ({
+      return updateData((prev) => ({
         ...prev,
         templates: prev.templates.filter((t) => t.id !== id),
       }));
@@ -256,7 +268,7 @@ export function useAppData() {
 
   const updateSettings = useCallback(
     (settings: Partial<Settings>) => {
-      updateData((prev) => ({
+      return updateData((prev) => ({
         ...prev,
         settings: { ...prev.settings, ...settings },
       }));
@@ -266,10 +278,14 @@ export function useAppData() {
 
   // Importação de backup: é a ÚNICA ação que libera a gravação de novo
   const replaceData = useCallback(
-    (newData: AppData) => {
+    async (newData: AppData) => {
+      const wasBlocked = blockSavesRef.current;
       markUnreadable(false);
+      dataRef.current = newData;
       setData(newData);
-      persist(newData, pin);
+      const saved = await persist(newData, pin);
+      if (!saved && wasBlocked) markUnreadable(true);
+      return saved;
     },
     [pin, persist, markUnreadable]
   );

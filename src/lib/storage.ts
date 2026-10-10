@@ -17,6 +17,14 @@ const ATTEMPTS_KEY = 'pin_attempts';
 const DATA_KEY = 'app_data';
 const DATA_IV_KEY = 'app_data_iv';
 const DATA_SALT_KEY = 'app_data_salt';
+let expectedCipher: string | null | undefined;
+
+export class DataConflictError extends Error {
+  constructor() {
+    super('Outra aba alterou os dados. Exporte as alterações pendentes, bloqueie e entre novamente antes de continuar.');
+    this.name = 'DataConflictError';
+  }
+}
 
 const EMPTY_DATA: AppData = {
   shifts: [],
@@ -72,17 +80,30 @@ async function idbSet(key: string, value: unknown): Promise<void> {
 }
 
 // Grava vários itens numa única transação: ou grava todos, ou nenhum.
-async function idbSetMany(entries: Array<[string, unknown]>): Promise<void> {
+async function idbSetMany(entries: Array<[string, unknown]>, checkConflict = false): Promise<void> {
+  const cipherBefore = expectedCipher;
   const db = await openDB();
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE_KV, 'readwrite');
     const store = tx.objectStore(STORE_KV);
-    for (const [key, value] of entries) {
-      store.put(value, key);
-    }
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-    tx.onabort = () => reject(tx.error);
+    let conflict: Error | null = null;
+    const req = store.get(DATA_KEY);
+    req.onsuccess = () => {
+      if (checkConflict && (req.result ?? null) !== cipherBefore) {
+        conflict = new DataConflictError();
+        tx.abort();
+        return;
+      }
+      for (const [key, value] of entries) store.put(value, key);
+    };
+    tx.oncomplete = () => {
+      const cipher = entries.find(([key]) => key === DATA_KEY);
+      if (cipher) expectedCipher = cipher[1] as string;
+      db.close();
+      resolve();
+    };
+    tx.onerror = () => { db.close(); reject(conflict ?? tx.error); };
+    tx.onabort = () => { db.close(); reject(conflict ?? tx.error); };
   });
 }
 
@@ -216,8 +237,9 @@ export async function resetAttempts(): Promise<void> {
 
 export function saveData(data: AppData, pin: string): Promise<void> {
   return enqueue(async () => {
+    if (expectedCipher === undefined) expectedCipher = await idbGet<string>(DATA_KEY);
     const entries = await buildDataRecords(data, pin);
-    await idbSetMany(entries);
+    await idbSetMany(entries, true);
   });
 }
 
@@ -225,9 +247,15 @@ export function saveData(data: AppData, pin: string): Promise<void> {
 // Se há dados salvos e eles não abrem, lança DataUnreadableError
 // (nunca devolve "vazio", para não sobrescrever o que existe).
 export async function loadData(pin: string): Promise<AppData> {
-  const salt = await idbGet<string>(DATA_SALT_KEY);
-  const iv = await idbGet<string>(DATA_IV_KEY);
-  const cipher = await idbGet<string>(DATA_KEY);
+  const db = await openDB();
+  const [salt, iv, cipher] = await new Promise<Array<string | null>>((resolve, reject) => {
+    const tx = db.transaction(STORE_KV, 'readonly');
+    const store = tx.objectStore(STORE_KV);
+    const requests = [DATA_SALT_KEY, DATA_IV_KEY, DATA_KEY].map((key) => store.get(key));
+    tx.oncomplete = () => { db.close(); resolve(requests.map((req) => req.result ?? null)); };
+    tx.onerror = () => { db.close(); reject(tx.error); };
+  });
+  expectedCipher = cipher;
 
   // Primeiro uso: nada salvo ainda
   if (!salt && !iv && !cipher) return createEmptyData();

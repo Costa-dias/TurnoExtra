@@ -1,3 +1,5 @@
+import { APP_VERSION } from '@/lib/appVersion';
+
 interface SiteFooterProps {
   className?: string;
 }
@@ -14,6 +16,7 @@ export function SiteFooter({ className = '' }: SiteFooterProps) {
       >
         Costa-Dias
       </a>
+      <span className="ml-2 whitespace-nowrap">v{APP_VERSION}</span>
     </footer>
   );
 }

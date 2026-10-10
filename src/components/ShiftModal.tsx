@@ -7,7 +7,7 @@ import { Button } from '@/components/Button';
 import { Input, Textarea } from '@/components/Input';
 import { Toggle } from '@/components/Toggle';
 import { ColorPicker } from '@/components/ColorPicker';
-import { validateShift, sanitizeString } from '@/lib/validation';
+import { validateShift, validateTemplate, sanitizeString } from '@/lib/validation';
 import { formatDateBR, formatCurrency, calcHours } from '@/lib/dateUtils';
 
 interface ShiftModalProps {
@@ -16,10 +16,10 @@ interface ShiftModalProps {
   shift?: Shift | null;
   defaultDate: string;
   templates: ShiftTemplate[];
-  onSave: (data: Omit<Shift, 'id' | 'createdAt' | 'updatedAt'>) => void;
-  onUpdate: (id: string, data: Partial<Shift>) => void;
-  onDelete: (id: string) => void;
-  onSaveTemplate: (tpl: Omit<ShiftTemplate, 'id'>) => void;
+  onSave: (data: Omit<Shift, 'id' | 'createdAt' | 'updatedAt'>) => Promise<boolean>;
+  onUpdate: (id: string, data: Partial<Shift>) => Promise<boolean>;
+  onDelete: (id: string) => Promise<boolean>;
+  onSaveTemplate: (tpl: Omit<ShiftTemplate, 'id'>) => Promise<boolean>;
 }
 
 const TYPES: ServiceType[] = ['plantao', 'servico', 'hora_extra', 'contrato'];
@@ -71,6 +71,7 @@ export function ShiftModal({
   const [paid, setPaid] = useState(false);
   const [notes, setNotes] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     if (shift) {
@@ -146,7 +147,8 @@ export function ShiftModal({
     setNotes(tpl.notes ?? '');
   }, []);
 
-  const handleSave = useCallback(() => {
+  const handleSave = useCallback(async () => {
+    if (busy) return;
     const data: Partial<Shift> = {
       type,
       location: sanitizeString(location, 100),
@@ -171,30 +173,35 @@ export function ShiftModal({
       return;
     }
 
-    if (isEdit && shift) {
-      onUpdate(shift.id, data);
-    } else {
-      onSave(data as Omit<Shift, 'id' | 'createdAt' | 'updatedAt'>);
-    }
-    onClose();
+    setBusy(true);
+    try {
+      const ok = isEdit && shift ? await onUpdate(shift.id, data)
+        : await onSave(data as Omit<Shift, 'id' | 'createdAt' | 'updatedAt'>);
+      if (ok) onClose();
+    } finally { setBusy(false); }
   }, [
     type, location, color, date, timed, startTime, endTime, total, usesRate,
     activeUnit, unitNum, qtyNum, isContract, endDate, paymentDate, paid, notes,
-    isEdit, shift, onUpdate, onSave, onClose,
+    isEdit, shift, onUpdate, onSave, onClose, busy,
   ]);
 
-  const handleSaveAsTemplate = useCallback(() => {
+  const handleSaveAsTemplate = useCallback(async () => {
+    if (busy) return;
     if (!location.trim()) return;
-    onSaveTemplate({
-      name: timed ? `${location} ${startTime}-${endTime}` : location,
+    const template = {
+      name: sanitizeString(timed ? `${location} ${startTime}-${endTime}` : location, 100),
       location: sanitizeString(location, 100),
       color,
       startTime: timed ? startTime : '00:00',
       endTime: timed ? endTime : '00:00',
       value: total,
       notes: notes ? sanitizeString(notes, 1000) : undefined,
-    });
-  }, [location, timed, startTime, endTime, color, total, notes, onSaveTemplate]);
+    };
+    const validation = validateTemplate(template);
+    if (!validation.valid) { setErrors(validation.errors); return; }
+    setBusy(true);
+    try { await onSaveTemplate(template); } finally { setBusy(false); }
+  }, [location, timed, startTime, endTime, color, total, notes, onSaveTemplate, busy]);
 
   return (
     <Modal
@@ -209,9 +216,8 @@ export function ShiftModal({
               type="button"
               variant="danger"
               size="md"
-              onClick={() => {
-                if (shift && confirm('Excluir este serviço?')) {
-                  onDelete(shift.id);
+              onClick={async () => {
+                if (shift && confirm('Excluir este serviço?') && await onDelete(shift.id)) {
                   onClose();
                 }
               }}
@@ -223,7 +229,7 @@ export function ShiftModal({
           <Button type="button" variant="ghost" onClick={onClose}>
             Cancelar
           </Button>
-          <Button type="button" variant="primary" onClick={handleSave}>
+          <Button type="button" variant="primary" onClick={handleSave} disabled={busy}>
             <Save size={16} /> {isEdit ? 'Salvar' : 'Adicionar'}
           </Button>
         </>
@@ -469,6 +475,7 @@ export function ShiftModal({
           <button
             type="button"
             onClick={handleSaveAsTemplate}
+            disabled={busy}
             className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-slate-300 py-2.5 text-sm text-slate-600 transition hover:border-teal-600 hover:text-teal-700 dark:border-slate-600 dark:text-slate-400 dark:hover:border-teal-500 dark:hover:text-teal-400"
           >
             <Layers size={15} />
