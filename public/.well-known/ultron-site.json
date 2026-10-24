@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "owner": "Costa-dias",
+  "host": "gestao-de-plantao.onrender.com",
+  "repository": "Costa-dias/TurnoExtra",
+  "registration": "21be0f82620cf726d257345cfeeea55b",
+  "scope": [
+    "https-headers"
+  ]
+}
