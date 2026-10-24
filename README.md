@@ -29,7 +29,9 @@ Os dados ficam **somente no seu aparelho**, protegidos por PIN. Não existe cont
 - Dados criptografados com **AES-GCM de 256 bits**; chave derivada do PIN (PBKDF2 com SHA-256)
 - O PIN nunca é salvo; PINs óbvios (como 1111 ou 1234) são recusados na criação
 - Bloqueio temporário após 5 tentativas de PIN incorretas
-- Bloqueio automático ao ir para segundo plano, com os dados removidos da memória
+- Sem bloqueio por inatividade: o aplicativo continua aberto e desbloqueado mesmo em segundo plano
+- O PIN volta a ser exigido ao fechar e abrir novamente, recarregar a página ou usar o botão **Bloquear**
+- Ao bloquear manualmente, os dados e o PIN são removidos da memória do aplicativo; não são gravados em sessão ou armazenamento local sem criptografia
 - Backup criptografado, com validação rigorosa e limite de 5 MB na importação
 - Proteção contra perda de dados: se os dados salvos não puderem ser lidos, o app bloqueia novas gravações em vez de sobrescrevê-los
 - Entradas validadas; planilha protegida contra injeção de fórmulas
