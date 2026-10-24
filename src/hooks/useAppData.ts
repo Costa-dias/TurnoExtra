@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { AppData, Shift, ShiftTemplate, Settings } from '@/types';
-import { startInactivityLock } from '@/lib/inactivityLock';
 import {
   isPinSet,
   setupPin,
@@ -50,15 +49,9 @@ export function useAppData() {
     })();
   }, []);
 
-  // Bloqueia após um minuto sem interação ou fora do app, sem fechar ao selecionar backup.
-  useEffect(() => {
-    if (phase !== 'unlocked') return;
-    return startInactivityLock(() => {
-      setPhase('locked');
-      setData(null);
-      setPin('');
-    });
-  }, [phase]);
+  // A sessão permanece desbloqueada enquanto o app continuar aberto.
+  // Fechar/recarregar o app recria o estado como 'loading' e exige o PIN.
+  // O usuário pode bloquear explicitamente pelo botão da interface.
 
   // Countdown timer for lockout
   useEffect(() => {
