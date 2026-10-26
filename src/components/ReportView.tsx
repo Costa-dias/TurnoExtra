@@ -11,6 +11,7 @@ import {
   ChevronDown,
   Share2,
 } from 'lucide-react';
+import { received, paymentStatus } from '@/lib/receivables';
 import type { Shift, ServiceType } from '@/types';
 import { SERVICE_TYPE_LABELS } from '@/types';
 import { formatCurrency, formatDateBR, toISODate } from '@/lib/dateUtils';
@@ -78,7 +79,7 @@ export function ReportView({ open, onClose, shifts }: ReportViewProps) {
 
   const totals = useMemo(() => {
     const total = reportShifts.reduce((sum, s) => sum + s.value, 0);
-    const paid = reportShifts.filter((s) => s.paid).reduce((sum, s) => sum + s.value, 0);
+    const paid = reportShifts.reduce((sum, s) => sum + received(s), 0);
     return {
       total,
       paid,
@@ -117,7 +118,7 @@ export function ReportView({ open, onClose, shifts }: ReportViewProps) {
       text += `${formatDateBR(date)}\n`;
       for (const s of dayShifts) {
         const when = hasTimeRange(s) ? ` | ${s.startTime}-${s.endTime}` : '';
-        text += `  ${getTypeLabel(s)} | ${s.location}${when} | ${s.paid ? 'Pago' : 'Pendente'} | ${formatCurrency(s.value)}\n`;
+        text += `  ${getTypeLabel(s)} | ${s.location}${when} | ${paymentStatus(s)} | ${formatCurrency(s.value)}\n`;
       }
       const dayTotal = dayShifts.reduce((sum, s) => sum + s.value, 0);
       text += `  Subtotal: ${formatCurrency(dayTotal)}\n\n`;
@@ -413,10 +414,10 @@ export function ReportView({ open, onClose, shifts }: ReportViewProps) {
                             </div>
 
                             <div className="flex items-center justify-center">
-                              {shift.paid ? (
+                              {received(shift) > 0 ? (
                                 <span className="flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-800 dark:bg-emerald-600/20 dark:text-emerald-400 print:bg-emerald-100 print:text-emerald-700">
                                   <CheckCircle2 size={10} />
-                                  Pago
+                                  {paymentStatus(shift)}
                                 </span>
                               ) : (
                                 <span className="flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-800 dark:bg-amber-600/20 dark:text-amber-400 print:bg-amber-100 print:text-amber-700">
@@ -463,7 +464,7 @@ export function ReportView({ open, onClose, shifts }: ReportViewProps) {
                 <div className="flex items-center gap-2">
                   <CheckCircle2 size={16} className="text-emerald-700 dark:text-emerald-400" />
                   <span className="text-sm text-slate-700 dark:text-slate-300 print:text-slate-700">
-                    Valor recebido ({totals.paidCount} pagos)
+                    Valor recebido ({totals.paidCount} quitados)
                   </span>
                 </div>
                 <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">

@@ -68,6 +68,18 @@ export function isValidBackupData(value: unknown): value is AppData {
     if (typeof shift.paid !== 'boolean') return false;
     if (shift.notes !== undefined && (typeof shift.notes !== 'string' || shift.notes.length > MAX_NOTES)) return false;
     if (!Number.isSafeInteger(shift.createdAt) || !Number.isSafeInteger(shift.updatedAt)) return false;
+    if (shift.payments !== undefined) {
+      if (!Array.isArray(shift.payments) || shift.payments.length > 1000) return false;
+      const ids = new Set<string>();
+      let total = 0;
+      for (const payment of shift.payments) {
+        if (!payment || typeof payment.id !== 'string' || !payment.id || payment.id.length > 100 || ids.has(payment.id)) return false;
+        if (!isValidISODate(payment.date) || !isFinitePositive(payment.amount, MAX_VALUE)) return false;
+        ids.add(payment.id); total += Math.round(payment.amount * 100);
+      }
+      if (total > Math.round(shift.value * 100)) return false;
+      if (shift.paid !== (total === Math.round(shift.value * 100))) return false;
+    }
     // Campos novos (opcionais)
     if (shift.type !== undefined && !SERVICE_TYPES.includes(shift.type)) return false;
     if (shift.hasTime !== undefined && typeof shift.hasTime !== 'boolean') return false;

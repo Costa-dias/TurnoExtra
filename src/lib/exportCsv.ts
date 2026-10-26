@@ -1,3 +1,4 @@
+import { received, outstanding, paymentStatus } from '@/lib/receivables';
 import type { Shift } from '@/types';
 import { BILLING_UNIT_LABELS } from '@/types';
 import { getTypeLabel, hasTimeRange, shiftHours } from '@/lib/shiftUtils';
@@ -28,6 +29,9 @@ const COLUMNS = [
   'Data do pagamento',
   'Data final',
   'Observações',
+  'Recebido (R$)',
+  'Saldo (R$)',
+  'Recebimentos (data: valor)',
 ];
 
 // AAAA-MM-DD -> DD/MM/AAAA (sem usar Date, evita erro de fuso horário)
@@ -48,7 +52,7 @@ function num(value: number): string {
 
 // Texto seguro para CSV: aspas quando preciso e proteção contra fórmulas
 function text(value: string): string {
-  const safe = /^[=+\-@\t\r]/.test(value) ? `'${value}` : value;
+  const safe = /^[\s]*[=+\-@]|^[\t\r\n]/.test(value) ? `'${value}` : value;
   return /[;"\r\n]/.test(safe) ? `"${safe.replace(/"/g, '""')}"` : safe;
 }
 
@@ -70,8 +74,8 @@ export function buildShiftsCsv(shifts: Shift[]): Blob {
     const hours = shiftHours(s);
     totalValue += s.value;
     if (hours !== null) totalHours += hours;
+    paidValue += received(s);
     if (s.paid) {
-      paidValue += s.value;
       if (hours !== null) paidHours += hours;
     }
     const timed = hasTimeRange(s);
@@ -88,10 +92,13 @@ export function buildShiftsCsv(shifts: Shift[]): Blob {
         s.unitValue !== undefined ? num(s.unitValue) : '',
         s.quantity !== undefined ? String(s.quantity).replace('.', ',') : '',
         num(s.value),
-        s.paid ? 'Sim' : 'Não',
+        paymentStatus(s),
         s.paymentDate ? formatDate(s.paymentDate) : '',
         s.endDate ? formatDate(s.endDate) : '',
         text(s.notes ?? ''),
+        num(received(s)),
+        num(outstanding(s)),
+        text((s.payments ?? []).map(p => `${p.date}: ${num(p.amount)}`).join(' | ')),
       ].join(';')
     );
   }

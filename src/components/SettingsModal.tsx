@@ -58,6 +58,7 @@ export function SettingsModal({
   const [pinError, setPinError] = useState('');
   const [resetConfirmPin, setResetConfirmPin] = useState('');
   const [resetError, setResetError] = useState('');
+  const [pendingImport, setPendingImport] = useState<AppData | null>(null);
   const [busy, setBusy] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { theme, setTheme } = useTheme();
@@ -65,6 +66,7 @@ export function SettingsModal({
   // Ao fechar, limpa PINs digitados e volta para a tela principal
   useEffect(() => {
     if (!open) {
+      setPendingImport(null);
       setSection('main');
       setOldPin('');
       setNewPin('');
@@ -173,14 +175,13 @@ export function SettingsModal({
         setBusy(true);
         try {
         const imported = await importBackup(file, pin);
-        if (!(await onImported(imported))) return;
-        showToast('Backup importado com sucesso.', 'success');
+        setPendingImport(imported);
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'Erro ao importar.';
         showToast(msg, 'error');
         } finally { setBusy(false); clearInput(); }
     },
-    [pin, onImported, showToast, busy]
+    [pin, showToast, busy]
   );
 
   const totalShifts = data.shifts.length;
@@ -240,6 +241,13 @@ export function SettingsModal({
         )
       }
     >
+      {pendingImport && <div role="alert" className="mb-4 rounded-xl border border-amber-400 p-4">
+        <p className="font-semibold">Prévia da restauração</p>
+        <p>{pendingImport.shifts.length} serviços e {pendingImport.templates.length} modelos substituirão os {data.shifts.length} serviços e {data.templates.length} modelos atuais. Não há mesclagem. Configurações também serão substituídas.</p>
+        <p>{pendingImport.shifts.filter(s => data.shifts.some(old => old.id === s.id)).length} serviços têm IDs já existentes. Exporte o estado atual antes de substituir.</p>
+        <Button disabled={busy} onClick={async () => { setBusy(true); try { if (await onImported(pendingImport)) { setPendingImport(null); showToast('Backup restaurado.', 'success'); } } finally { setBusy(false); } }}>Substituir pelos dados do backup</Button>
+        <Button disabled={busy} variant="ghost" onClick={() => setPendingImport(null)}>Cancelar restauração</Button>
+      </div>}
       {section === 'main' && (
         <div className="space-y-5">
           {/* Stats */}

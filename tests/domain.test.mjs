@@ -1,0 +1,31 @@
+import assert from 'node:assert/strict';
+import { createServer } from 'vite';
+const server = await createServer({ server: { middlewareMode: true }, appType: 'custom' });
+try {
+  const { received, outstanding, conflicts, dueStatus } = await server.ssrLoadModule('/src/lib/receivables.ts');
+  const { isValidBackupData } = await server.ssrLoadModule('/src/lib/validation.ts');
+  const { exportBackup, importBackup } = await server.ssrLoadModule('/src/lib/backup.ts');
+  const { buildCalendar } = await server.ssrLoadModule('/src/lib/calendarExport.ts');
+  const base = { id: 'test', location: 'Clínica, Unidade; A', color: '#0d9488', date: '2026-10-25', startTime: '19:00', endTime: '07:00', value: 600, paid: false, paymentDate: '2026-10-26', createdAt: 1, updatedAt: 1 };
+  const partial = { ...base, payments: [{ id: 'p1', date: '2026-10-25', amount: 200 }] };
+  assert.equal(received(partial), 200); assert.equal(outstanding(partial), 400);
+  assert.equal(received({ ...base, paid: true }), 600);
+  assert.equal(dueStatus(partial, '2026-10-27'), 'Vencido');
+  assert.equal(conflicts(base, { ...base, date: '2026-10-26', startTime: '06:00', endTime: '08:00' }), true);
+  assert.equal(conflicts(base, { ...base, date: '2026-10-26', startTime: '07:00', endTime: '08:00' }), false);
+  assert.equal(conflicts(base, { ...base, hasTime: false }), false);
+  const data = { shifts: [partial], templates: [], settings: { theme: 'dark', defaultColor: '#0d9488' } };
+  assert.equal(isValidBackupData(data), true);
+  assert.equal(isValidBackupData({ ...data, shifts: [{ ...partial, payments: [{ id: 'x', date: '2026-10-25', amount: 601 }] }] }), false);
+  assert.equal(isValidBackupData({ ...data, shifts: [{ ...partial, paid: true }] }), false);
+  const blob = await exportBackup(data, '582946');
+  assert.deepEqual(await importBackup(new File([blob], 'backup.json', { type: 'application/json' }), '582946'), data);
+  await assert.rejects(() => importBackup(new File([blob], 'backup.json', { type: 'application/json' }), 'wrong'));
+  const ics = await buildCalendar([{ ...base, notes: 'Linha 1\rBEGIN:VEVENT' }]).text();
+  assert.match(ics, /DTEND:20261026T070000/);
+  assert.match(ics, /SUMMARY:Clínica\\, Unidade\\; A/);
+  assert.equal(ics.split('\r\n').filter(l => l === 'BEGIN:VEVENT').length, 1);
+  const long = await buildCalendar([{ ...base, location: 'ç'.repeat(100) }]).text();
+  assert.ok(long.split('\r\n').every(l => Buffer.byteLength(l) <= 75));
+  console.log('TurnoExtra: partial/legacy payments, overnight conflicts, validation, encrypted backup and ICS passed.');
+} finally { await server.close(); }

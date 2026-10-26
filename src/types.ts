@@ -15,6 +15,12 @@ export const BILLING_UNIT_LABELS: Record<BillingUnit, string> = {
   mes: 'Mês',
 };
 
+export interface Payment {
+  id: string;
+  date: string;
+  amount: number;
+}
+
 export interface Shift {
   id: string;
   location: string; // empresa ou local
@@ -25,6 +31,7 @@ export interface Shift {
   value: number; // R$ total
   paymentDate?: string; // ISO yyyy-mm-dd
   paid: boolean;
+  payments?: Payment[]; // absent on legacy records: paid retains its original meaning
   notes?: string;
   createdAt: number;
   updatedAt: number;

@@ -52,10 +52,24 @@ React, TypeScript, Vite, Tailwind CSS, Lucide, Web Crypto API e IndexedDB.
 
 ## Como rodar localmente
 
-Requer Node.js 18 ou superior.
+Requer Node.js 24.
 
 ```bash
-git clone [https://github.com/Costa-dias/Gestao-de-plantao.git](https://github.com/Costa-dias/Gestao-de-plantao.git)
-cd Gestao-de-plantao
+git clone https://github.com/Costa-dias/TurnoExtra.git
+cd TurnoExtra
 npm install
 npm run dev
+
+```
+
+## Evolução do controle de recebimentos
+
+- Recebimentos parciais com data, valor e saldo por serviço; registros antigos permanecem compatíveis.
+- Cobranças de todos os períodos por empresa, ordenadas pelo vencimento.
+- Avisos de conflito inclusive na virada do dia; o usuário decide se mantém a sobreposição.
+- Exportação `.ics` com horários locais, sem sincronização automática e sem valores financeiros. Importações repetidas dependem do tratamento de duplicatas da agenda de destino.
+- Prévia de restauração: o backup substitui os dados atuais somente após confirmação.
+
+## Validação automatizada
+
+`npm test` verifica recebimentos legados/parciais, conflitos noturnos, validação de backup, criptografia/senha incorreta e exportação ICS. Execute também `npm run typecheck`, `npm run lint` e `npm run build`.

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Trash2, Save, Layers } from 'lucide-react';
-import type { Shift, ShiftTemplate, ServiceType, BillingUnit } from '@/types';
+import type { Shift, ShiftTemplate, ServiceType, BillingUnit, Payment } from '@/types';
 import { SERVICE_TYPE_LABELS, BILLING_UNIT_LABELS } from '@/types';
 import { Modal } from '@/components/Modal';
 import { Button } from '@/components/Button';
@@ -8,7 +8,7 @@ import { Input, Textarea } from '@/components/Input';
 import { Toggle } from '@/components/Toggle';
 import { ColorPicker } from '@/components/ColorPicker';
 import { validateShift, validateTemplate, sanitizeString } from '@/lib/validation';
-import { formatDateBR, formatCurrency, calcHours } from '@/lib/dateUtils';
+import { formatDateBR, formatCurrency, calcHours, toISODate } from '@/lib/dateUtils';
 
 interface ShiftModalProps {
   open: boolean;
@@ -68,7 +68,9 @@ export function ShiftModal({
   const [unitValue, setUnitValue] = useState('');
   const [quantity, setQuantity] = useState('');
   const [paymentDate, setPaymentDate] = useState('');
-  const [paid, setPaid] = useState(false);
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [paymentAmount, setPaymentAmount] = useState('');
+  const [receivedDate, setReceivedDate] = useState(toISODate(new Date()));
   const [notes, setNotes] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
@@ -88,7 +90,7 @@ export function ShiftModal({
       setUnitValue(shift.unitValue !== undefined ? String(shift.unitValue) : '');
       setQuantity(shift.quantity !== undefined ? String(shift.quantity) : '');
       setPaymentDate(shift.paymentDate ?? '');
-      setPaid(shift.paid);
+      setPayments(shift.payments ?? (shift.paid && shift.value > 0 ? [{ id: crypto.randomUUID(), date: shift.paymentDate || shift.date, amount: shift.value }] : []));
       setNotes(shift.notes ?? '');
     } else {
       setType('plantao');
@@ -104,9 +106,11 @@ export function ShiftModal({
       setUnitValue('');
       setQuantity('');
       setPaymentDate('');
-      setPaid(false);
+      setPayments([]);
       setNotes('');
     }
+    setPaymentAmount('');
+    setReceivedDate(toISODate(new Date()));
     setErrors({});
   }, [shift, open, defaultDate]);
 
@@ -124,6 +128,9 @@ export function ShiftModal({
     : toNumber(quantity);
   const unitNum = toNumber(unitValue);
   const total = usesRate ? Math.round(unitNum * qtyNum * 100) / 100 : toNumber(value);
+
+  const received = Math.round(payments.reduce((sum, p) => sum + p.amount, 0) * 100) / 100;
+  const paid = received === total;
 
   const handleTypeChange = useCallback(
     (next: ServiceType) => {
@@ -164,9 +171,11 @@ export function ShiftModal({
       endDate: isContract && endDate ? endDate : undefined,
       paymentDate: paymentDate || undefined,
       paid,
+      payments,
       notes: notes ? sanitizeString(notes, 1000) : undefined,
     };
 
+    if (received > total) { setErrors({ payments: 'O valor recebido supera o total. Ajuste os recebimentos antes de salvar.' }); return; }
     const { valid, errors: validationErrors } = validateShift(data);
     if (!valid) {
       setErrors(validationErrors);
@@ -181,7 +190,7 @@ export function ShiftModal({
     } finally { setBusy(false); }
   }, [
     type, location, color, date, timed, startTime, endTime, total, usesRate,
-    activeUnit, unitNum, qtyNum, isContract, endDate, paymentDate, paid, notes,
+    activeUnit, unitNum, qtyNum, isContract, endDate, paymentDate, paid, payments, received, notes,
     isEdit, shift, onUpdate, onSave, onClose, busy,
   ]);
 
@@ -430,7 +439,7 @@ export function ShiftModal({
         )}
 
         <Input
-          label="Data de pagamento"
+          label="Vencimento previsto"
           type="date"
           value={paymentDate}
           onChange={(e) => setPaymentDate(e.target.value)}
@@ -456,9 +465,25 @@ export function ShiftModal({
           </div>
         ) : null}
 
-        <div className={`flex items-center justify-between ${boxCls}`}>
-          <span className={labelCls}>Marcar como pago</span>
-          <Toggle checked={paid} onChange={setPaid} label="Marcar como pago" />
+        <div className={boxCls}>
+          <p className={labelCls}>Recebimentos</p>
+          <p className="my-2 text-sm">Recebido: {formatCurrency(received)} · Saldo: {formatCurrency(Math.max(0, total - received))}</p>
+          {payments.map(p => <div key={p.id} className="my-2 flex items-center justify-between gap-2 text-sm">
+            <span>{formatDateBR(p.date)} · {formatCurrency(p.amount)}</span>
+            <button type="button" onClick={() => { if (confirm('Remover este recebimento?')) setPayments(payments.filter(x => x.id !== p.id)); }} aria-label="Remover recebimento">Remover</button>
+          </div>)}
+          <div className="grid grid-cols-2 gap-2">
+            <Input label="Valor recebido (R$)" type="number" min="0.01" step="0.01" value={paymentAmount} onChange={e => setPaymentAmount(e.target.value)} />
+            <Input label="Recebido em" type="date" value={receivedDate} onChange={e => setReceivedDate(e.target.value)} />
+          </div>
+          <Button type="button" variant="ghost" onClick={() => {
+            const amount = Math.round(Number(paymentAmount) * 100) / 100;
+            if (!Number.isFinite(amount) || amount <= 0 || amount > Math.round((total - received) * 100) / 100 || !/^\d{4}-\d{2}-\d{2}$/.test(receivedDate) || receivedDate > toISODate(new Date())) {
+              setErrors({ payments: 'Informe um valor até o saldo e uma data de recebimento válida, até hoje.' }); return;
+            }
+            setPayments([...payments, { id: crypto.randomUUID(), amount, date: receivedDate }]); setPaymentAmount(''); setErrors({});
+          }}>Adicionar recebimento</Button>
+          {errors.payments && <p role="alert" className="text-sm text-red-600">{errors.payments}</p>}
         </div>
 
         <Textarea

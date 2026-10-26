@@ -13,6 +13,9 @@ import {
   Download,
   AlertTriangle,
 } from 'lucide-react';
+import { received, outstanding, paymentStatus, dueStatus, conflicts } from '@/lib/receivables';
+import { buildCalendar } from '@/lib/calendarExport';
+import { downloadBackup } from '@/lib/backup';
 import { useAppData } from '@/hooks/useAppData';
 import { useToast } from '@/hooks/useToast';
 import { useTheme } from '@/lib/theme';
@@ -152,20 +155,25 @@ function App() {
 
   const handleSaveShift = useCallback(
     async (shiftData: Omit<Shift, 'id' | 'createdAt' | 'updatedAt'>) => {
+      const overlapping = data?.shifts.filter(s => conflicts(shiftData, s)) ?? [];
+      if (overlapping.length && !confirm(`Conflito com ${overlapping.length} serviço(s): ${overlapping.map(s => s.location).join(', ')}. Salvar mesmo assim?`)) return false;
       if (!(await addShift(shiftData))) return false;
       showToast('Serviço adicionado.', 'success');
       return true;
     },
-    [addShift, showToast]
+    [addShift, showToast, data]
   );
 
   const handleUpdateShift = useCallback(
     async (id: string, shiftData: Partial<Shift>) => {
+      const original = data?.shifts.find(s => s.id === id);
+      const overlapping = original ? data!.shifts.filter(s => s.id !== id && conflicts({ ...original, ...shiftData }, s)) : [];
+      if (overlapping.length && !confirm(`Conflito com ${overlapping.length} serviço(s). Salvar mesmo assim?`)) return false;
       if (!(await updateShift(id, shiftData))) return false;
       showToast('Serviço atualizado.', 'success');
       return true;
     },
-    [updateShift, showToast]
+    [updateShift, showToast, data]
   );
 
   const handleDeleteShift = useCallback(
@@ -179,11 +187,13 @@ function App() {
 
   const handleConfirmRepeat = useCallback(
     async (list: Array<Omit<Shift, 'id' | 'createdAt' | 'updatedAt'>>) => {
+      const clashes = list.filter((item, i) => [...(data?.shifts ?? []), ...list.slice(0, i)].some(s => conflicts(item, s)));
+      if (clashes.length && !confirm(`${clashes.length} repetição(ões) têm conflito de horário. Criar mesmo assim?`)) return false;
       if (!(await addShifts(list))) return false;
       showToast(`${list.length} serviços criados.`, 'success');
       return true;
     },
-    [addShifts, showToast]
+    [addShifts, showToast, data]
   );
 
   const handleSaveTemplate = useCallback(
@@ -199,6 +209,8 @@ function App() {
   const handleUseTemplate = useCallback(
     async (tpl: ShiftTemplate) => {
       const date = selectedDate ?? toISODate(new Date());
+      const candidate = { date, startTime: tpl.startTime, endTime: tpl.endTime };
+      if (data?.shifts.some(s => conflicts(candidate, s)) && !confirm('O modelo conflita com outro serviço. Criar mesmo assim?')) return false;
       const saved = await addShift({
         type: 'plantao',
         location: tpl.location,
@@ -216,7 +228,7 @@ function App() {
       showToast(`Serviço criado em ${formatDateBR(date)}.`, 'success');
       return true;
     },
-    [selectedDate, addShift, showToast]
+    [selectedDate, addShift, showToast, data]
   );
 
   const handleImported = useCallback(
@@ -420,6 +432,23 @@ function App() {
           />
         </div>
 
+        <section className="my-5 rounded-xl border border-slate-200 p-4 dark:border-slate-700" aria-label="Cobranças de todos os períodos">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="font-semibold">Cobranças · todos os períodos</h2>
+            <Button variant="ghost" onClick={() => downloadBackup(buildCalendar(data.shifts), 'turnoextra-agenda.ics')}>Exportar agenda (.ics)</Button>
+          </div>
+          <p className="my-2 text-sm">Recebido: {formatCurrency(data.shifts.reduce((sum, s) => sum + received(s), 0))} · A receber: {formatCurrency(data.shifts.reduce((sum, s) => sum + outstanding(s), 0))}</p>
+          {Object.entries(data.shifts.reduce<Record<string, number>>((groups, s) => {
+            const balance = outstanding(s); if (balance) groups[s.location] = (groups[s.location] || 0) + balance; return groups;
+          }, {})).map(([location, value]) => <p key={location} className="text-sm">{location}: {formatCurrency(value)}</p>)}
+          <div className="mt-3 max-h-56 overflow-y-auto space-y-2">
+            {data.shifts.filter(s => outstanding(s) > 0).sort((a, b) => (a.paymentDate || '9999').localeCompare(b.paymentDate || '9999')).map(s => <button key={s.id} onClick={() => handleSelectShift(s)} className="block w-full rounded-lg border border-slate-200 p-2 text-left text-sm dark:border-slate-700">
+              {s.location} · {formatCurrency(outstanding(s))} · {dueStatus(s)}{s.paymentDate ? ` (${formatDateBR(s.paymentDate)})` : ''} · {paymentStatus(s)}
+            </button>)}
+            {!data.shifts.some(s => outstanding(s) > 0) && <p className="text-sm">Nenhum recebimento pendente.</p>}
+          </div>
+        </section>
+
         <MonthView
           year={year}
           month={month}
@@ -460,9 +489,9 @@ function App() {
                         {shift.value > 0 && ` · ${formatCurrency(shift.value)}`}
                       </p>
                     </div>
-                    {shift.paid && (
+                    {(shift.paid || received(shift) > 0) && (
                       <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-800 dark:bg-emerald-600/20 dark:text-emerald-400">
-                        Pago
+                        {paymentStatus(shift)}
                       </span>
                     )}
                   </button>
