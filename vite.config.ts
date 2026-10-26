@@ -62,23 +62,24 @@ export default defineConfig(({ command }) => ({
         background_color: '#11162d',
         display: 'standalone',
         orientation: 'portrait',
+        id: '/',
         start_url: '/',
         icons: [
           {
-            src: 'icon-192.png',
+            src: 'icon-192.png?v=20261026-2',
             sizes: '192x192',
             type: 'image/png',
           },
           {
-            src: 'icon-512.png',
+            src: 'icon-512.png?v=20261026-2',
             sizes: '512x512',
             type: 'image/png',
           },
           {
-            src: 'icon-512.png',
+            src: 'icon-512.png?v=20261026-2',
             sizes: '512x512',
             type: 'image/png',
-            purpose: 'any maskable',
+            purpose: 'any',
           },
         ],
       },
