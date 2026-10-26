@@ -54,28 +54,28 @@ export default defineConfig(({ command }) => ({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'robots.txt'],
       manifest: {
-        name: 'TurnoExtra — Gestão de Plantões',
+        name: 'TurnoExtra — Trabalhos e Serviços',
         short_name: 'TurnoExtra',
         description:
-          'Gestão e visualização de escalas de plantão para profissionais de saúde.',
-        theme_color: '#0f766e',
-        background_color: '#0f172a',
+          'Organize serviços, trabalhos, freelas, escalas e recebimentos em um só lugar.',
+        theme_color: '#11162d',
+        background_color: '#11162d',
         display: 'standalone',
         orientation: 'portrait',
         start_url: '/',
         icons: [
           {
-            src: 'pwa-192x192.png',
+            src: 'icon-192.png',
             sizes: '192x192',
             type: 'image/png',
           },
           {
-            src: 'pwa-512x512.png',
+            src: 'icon-512.png',
             sizes: '512x512',
             type: 'image/png',
           },
           {
-            src: 'pwa-512x512.png',
+            src: 'icon-512.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'any maskable',
