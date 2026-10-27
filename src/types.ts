@@ -33,6 +33,7 @@ export interface Shift {
   paid: boolean;
   payments?: Payment[]; // absent on legacy records: paid retains its original meaning
   notes?: string;
+  collection?: { lastContact?: string; expectedDate?: string; status?: 'Aguardando retorno' | 'Pagamento combinado' | 'Precisa de contato'; note?: string };
   createdAt: number;
   updatedAt: number;
   // Campos novos (todos opcionais: dados antigos continuam válidos)

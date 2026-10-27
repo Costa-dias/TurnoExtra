@@ -24,6 +24,11 @@ try {
   assert.equal(transfer.entries[0].id, 'turnoextra:test:p1');
   assert.equal(transfer.entries[0].date, '2026-10-25');
   assert.throws(() => financeTransfer([{ ...base, paid: false }]));
+  const followed = { ...data, shifts: [{ ...partial, collection: { lastContact: '2026-10-27', expectedDate: '2026-11-02', status: 'Aguardando retorno', note: 'Retornar na próxima semana' } }] };
+  assert.equal(isValidBackupData(followed), true);
+  assert.equal(isValidBackupData({ ...followed, shifts: [{ ...followed.shifts[0], collection: { expectedDate: '2026-02-30' } }] }), false);
+  const followedBlob = await exportBackup(followed, '582946');
+  assert.deepEqual(await importBackup(new File([followedBlob], 'backup.json', { type: 'application/json' }), '582946'), followed);
   const blob = await exportBackup(data, '582946');
   assert.deepEqual(await importBackup(new File([blob], 'backup.json', { type: 'application/json' }), '582946'), data);
   await assert.rejects(() => importBackup(new File([blob], 'backup.json', { type: 'application/json' }), 'wrong'));

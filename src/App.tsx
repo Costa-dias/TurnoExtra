@@ -29,6 +29,7 @@ import { LockScreen } from '@/components/LockScreen';
 import { LandingPage } from '@/components/LandingPage';
 import { MonthView } from '@/components/MonthView';
 import { ShiftModal } from '@/components/ShiftModal';
+import { CollectionFollowUp } from '@/components/CollectionFollowUp';
 import { TemplateModal } from '@/components/TemplateModal';
 import { SettingsModal } from '@/components/SettingsModal';
 import { RepeatModal } from '@/components/RepeatModal';
@@ -441,6 +442,11 @@ function App() {
           {Object.entries(data.shifts.reduce<Record<string, number>>((groups, s) => {
             const balance = outstanding(s); if (balance) groups[s.location] = (groups[s.location] || 0) + balance; return groups;
           }, {})).map(([location, value]) => <p key={location} className="text-sm">{location}: {formatCurrency(value)}</p>)}
+          <h3 className="mt-4 font-semibold">Acompanhamento de cobranças</h3>
+          <p className="text-xs">Registre contatos, combine uma data e revise uma mensagem antes de enviar.</p>
+          <div className="mt-3 space-y-2">
+            {data.shifts.filter(s => outstanding(s) > 0).sort((a, b) => (a.collection?.expectedDate || a.paymentDate || '9999').localeCompare(b.collection?.expectedDate || b.paymentDate || '9999')).map(s => <CollectionFollowUp key={s.id} shift={s} onSave={updateShift} />)}
+          </div>
           <div className="mt-3 max-h-56 overflow-y-auto space-y-2">
             {data.shifts.filter(s => outstanding(s) > 0).sort((a, b) => (a.paymentDate || '9999').localeCompare(b.paymentDate || '9999')).map(s => <button key={s.id} onClick={() => handleSelectShift(s)} className="block w-full rounded-lg border border-slate-200 p-2 text-left text-sm dark:border-slate-700">
               {s.location} · {formatCurrency(outstanding(s))} · {dueStatus(s)}{s.paymentDate ? ` (${formatDateBR(s.paymentDate)})` : ''} · {paymentStatus(s)}

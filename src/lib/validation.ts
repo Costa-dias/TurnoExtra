@@ -80,6 +80,14 @@ export function isValidBackupData(value: unknown): value is AppData {
       if (total > Math.round(shift.value * 100)) return false;
       if (shift.paid !== (total === Math.round(shift.value * 100))) return false;
     }
+    if (shift.collection !== undefined) {
+      const c = shift.collection;
+      if (!c || typeof c !== 'object') return false;
+      if (c.lastContact !== undefined && !isValidISODate(c.lastContact)) return false;
+      if (c.expectedDate !== undefined && !isValidISODate(c.expectedDate)) return false;
+      if (c.status !== undefined && !['Aguardando retorno', 'Pagamento combinado', 'Precisa de contato'].includes(c.status)) return false;
+      if (c.note !== undefined && (typeof c.note !== 'string' || c.note.length > 500)) return false;
+    }
     // Campos novos (opcionais)
     if (shift.type !== undefined && !SERVICE_TYPES.includes(shift.type)) return false;
     if (shift.hasTime !== undefined && typeof shift.hasTime !== 'boolean') return false;
