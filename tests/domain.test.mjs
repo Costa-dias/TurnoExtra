@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { createServer } from 'vite';
 const server = await createServer({ server: { middlewareMode: true }, appType: 'custom' });
 try {
+  const { financeTransfer } = await server.ssrLoadModule('/src/lib/financeTransfer.ts');
   const { received, outstanding, conflicts, dueStatus } = await server.ssrLoadModule('/src/lib/receivables.ts');
   const { isValidBackupData } = await server.ssrLoadModule('/src/lib/validation.ts');
   const { exportBackup, importBackup } = await server.ssrLoadModule('/src/lib/backup.ts');
@@ -18,6 +19,11 @@ try {
   assert.equal(isValidBackupData(data), true);
   assert.equal(isValidBackupData({ ...data, shifts: [{ ...partial, payments: [{ id: 'x', date: '2026-10-25', amount: 601 }] }] }), false);
   assert.equal(isValidBackupData({ ...data, shifts: [{ ...partial, paid: true }] }), false);
+  const transfer = JSON.parse(await financeTransfer([partial, { ...base, id: 'unpaid', paid: false }]).text());
+  assert.equal(transfer.entries.length, 1); assert.equal(transfer.entries[0].amount, 200);
+  assert.equal(transfer.entries[0].id, 'turnoextra:test:p1');
+  assert.equal(transfer.entries[0].date, '2026-10-25');
+  assert.throws(() => financeTransfer([{ ...base, paid: false }]));
   const blob = await exportBackup(data, '582946');
   assert.deepEqual(await importBackup(new File([blob], 'backup.json', { type: 'application/json' }), '582946'), data);
   await assert.rejects(() => importBackup(new File([blob], 'backup.json', { type: 'application/json' }), 'wrong'));

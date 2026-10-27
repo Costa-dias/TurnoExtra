@@ -1,3 +1,4 @@
+import { financeTransfer } from '@/lib/financeTransfer';
 import { useState, useCallback, useEffect, useRef } from 'react';
 import {
   Lock,
@@ -334,6 +335,9 @@ export function SettingsModal({
                   <p className="text-sm text-slate-800 dark:text-slate-200">Exportar backup</p>
                   <p className="text-xs text-slate-600 dark:text-slate-400">Arquivo .json criptografado</p>
                 </div>
+              </button>
+              <button className={itemButton} onClick={() => { try { downloadBackup(financeTransfer(data.shifts), 'turnoextra-recebimentos.json'); showToast('Recebimentos exportados. O arquivo não é criptografado; importe no Dashboard Finanças.', 'success'); } catch (e) { showToast(e instanceof Error ? e.message : 'Erro ao exportar.', 'error'); } }}>
+                <Download size={18} /><div><p className="text-sm">Transferir recebimentos para o Dashboard</p><p className="text-xs text-slate-500">Somente valores recebidos · JSON sem criptografia</p></div>
               </button>
               <button onClick={handleExportCsv} className={itemButton}>
                 <Download size={18} className="text-teal-700 dark:text-teal-400" />
