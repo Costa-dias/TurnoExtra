@@ -16,6 +16,7 @@ export const BILLING_UNIT_LABELS: Record<BillingUnit, string> = {
 };
 
 export interface Payment {
+  dateInferred?: boolean;
   id: string;
   date: string;
   amount: number;
@@ -33,6 +34,7 @@ export interface Shift {
   paid: boolean;
   payments?: Payment[]; // absent on legacy records: paid retains its original meaning
   notes?: string;
+  history?: { at: number; before: string; after: string }[];
   collection?: { lastContact?: string; expectedDate?: string; status?: 'Aguardando retorno' | 'Pagamento combinado' | 'Precisa de contato'; note?: string };
   createdAt: number;
   updatedAt: number;
@@ -46,6 +48,11 @@ export interface Shift {
 }
 
 export interface ShiftTemplate {
+  type?: ServiceType;
+  hasTime?: boolean;
+  billingUnit?: BillingUnit;
+  unitValue?: number;
+  quantity?: number;
   id: string;
   name: string;
   location: string;

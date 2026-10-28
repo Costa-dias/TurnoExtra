@@ -50,6 +50,7 @@ function App() {
     pin,
     error,
     saveError,
+    saving,
     lockedSeconds,
     handleSetupPin,
     handleUnlock,
@@ -210,14 +211,15 @@ function App() {
   const handleUseTemplate = useCallback(
     async (tpl: ShiftTemplate) => {
       const date = selectedDate ?? toISODate(new Date());
-      const candidate = { date, startTime: tpl.startTime, endTime: tpl.endTime };
+      const candidate = { date, startTime: tpl.startTime, endTime: tpl.endTime, hasTime: tpl.hasTime };
       if (data?.shifts.some(s => conflicts(candidate, s)) && !confirm('O modelo conflita com outro serviço. Criar mesmo assim?')) return false;
       const saved = await addShift({
-        type: 'plantao',
+        type: tpl.type ?? 'plantao',
+        billingUnit: tpl.billingUnit, unitValue: tpl.unitValue, quantity: tpl.quantity,
         location: tpl.location,
         color: tpl.color,
         date,
-        hasTime: true,
+        hasTime: tpl.hasTime !== false,
         startTime: tpl.startTime,
         endTime: tpl.endTime,
         value: tpl.value,
@@ -302,6 +304,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 pb-24 text-slate-900 transition-colors dark:bg-slate-950 dark:text-slate-100">
+      <p role="status" className="text-center text-sm">{saving ? 'Salvando…' : saveError ? 'Falha ao salvar' : 'Salvo neste navegador'}</p>
       {saveError && <div role="alert" className="mx-auto max-w-4xl rounded-xl border border-red-400 bg-red-50 p-4 text-red-900 dark:bg-red-950 dark:text-red-100">Alterações não salvas: {saveError}</div>}
       {/* Header */}
       <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur-lg transition-colors dark:border-slate-800 dark:bg-slate-950/90">

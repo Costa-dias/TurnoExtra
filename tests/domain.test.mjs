@@ -3,11 +3,16 @@ import { createServer } from 'vite';
 const server = await createServer({ server: { middlewareMode: true }, appType: 'custom' });
 try {
   const { financeTransfer } = await server.ssrLoadModule('/src/lib/financeTransfer.ts');
-  const { received, outstanding, conflicts, dueStatus } = await server.ssrLoadModule('/src/lib/receivables.ts');
+  const { received, outstanding, conflicts, dueStatus, normalizePayments } = await server.ssrLoadModule('/src/lib/receivables.ts');
   const { isValidBackupData } = await server.ssrLoadModule('/src/lib/validation.ts');
   const { exportBackup, importBackup } = await server.ssrLoadModule('/src/lib/backup.ts');
   const { buildCalendar } = await server.ssrLoadModule('/src/lib/calendarExport.ts');
   const base = { id: 'test', location: 'Clínica, Unidade; A', color: '#0d9488', date: '2026-10-25', startTime: '19:00', endTime: '07:00', value: 600, paid: false, paymentDate: '2026-10-26', createdAt: 1, updatedAt: 1 };
+  const legacy = { ...base, paid: true };
+  const beforeEdit = JSON.parse(await financeTransfer([legacy]).text());
+  const afterEdit = JSON.parse(await financeTransfer([{ ...legacy, payments: normalizePayments(legacy) }]).text());
+  assert.equal(beforeEdit.entries[0].id, afterEdit.entries[0].id);
+  assert.equal(new Map([...beforeEdit.entries,...afterEdit.entries].map(e=>[e.id,e])).size,1);
   const partial = { ...base, payments: [{ id: 'p1', date: '2026-10-25', amount: 200 }] };
   assert.equal(received(partial), 200); assert.equal(outstanding(partial), 400);
   assert.equal(received({ ...base, paid: true }), 600);
