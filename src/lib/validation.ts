@@ -80,6 +80,7 @@ export function isValidBackupData(value: unknown): value is AppData {
       if (total > Math.round(shift.value * 100)) return false;
       if (shift.paid !== (total === Math.round(shift.value * 100))) return false;
     }
+    if (shift.history !== undefined && (!Array.isArray(shift.history) || shift.history.length > 100 || shift.history.some(h => !h || !Number.isSafeInteger(h.at) || typeof h.before !== 'string' || h.before.length > 20000 || typeof h.after !== 'string' || h.after.length > 20000))) return false;
     if (shift.collection !== undefined) {
       const c = shift.collection;
       if (!c || typeof c !== 'object') return false;
@@ -102,6 +103,11 @@ export function isValidBackupData(value: unknown): value is AppData {
     if (!template || typeof template !== 'object') return false;
     if (typeof template.id !== 'string' || template.id.length > 100 || templateIds.has(template.id)) return false;
     templateIds.add(template.id);
+    if (template.type !== undefined && !SERVICE_TYPES.includes(template.type)) return false;
+    if (template.hasTime !== undefined && typeof template.hasTime !== 'boolean') return false;
+    if (template.billingUnit !== undefined && !BILLING_UNITS.includes(template.billingUnit)) return false;
+    if (template.unitValue !== undefined && !isFiniteNonNegative(template.unitValue, MAX_VALUE)) return false;
+    if (template.quantity !== undefined && !isFiniteNonNegative(template.quantity, MAX_QUANTITY)) return false;
     if (typeof template.name !== 'string' || template.name.length > MAX_NAME) return false;
     if (typeof template.location !== 'string' || template.location.length > MAX_LOCATION) return false;
     if (!isValidColor(template.color) || typeof template.startTime !== 'string' || !TIME.test(template.startTime)) return false;

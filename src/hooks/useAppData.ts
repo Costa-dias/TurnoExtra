@@ -24,6 +24,8 @@ export function useAppData() {
   const saveSequence = useRef(0);
   const [pin, setPin] = useState<string>('');
   const [error, setError] = useState<string>('');
+  const pendingSaves = useRef(0);
+  const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string>('');
   const [dataUnreadable, setDataUnreadable] = useState(false);
   const [lockedSeconds, setLockedSeconds] = useState<number>(0);
@@ -35,6 +37,14 @@ export function useAppData() {
     blockSavesRef.current = value;
     setDataUnreadable(value);
   }, []);
+
+  useEffect(() => {
+    const guard = (event: BeforeUnloadEvent) => {
+      if (pendingSaves.current || saveError) { event.preventDefault(); event.returnValue = ''; }
+    };
+    window.addEventListener('beforeunload', guard);
+    return () => window.removeEventListener('beforeunload', guard);
+  }, [saveError]);
 
   // Initial check: is PIN set?
   useEffect(() => {
@@ -81,6 +91,7 @@ export function useAppData() {
         );
         return false;
       }
+      pendingSaves.current++; setSaving(true);
       try {
         await saveData(newData, currentPin);
         if (sequence === saveSequence.current) setSaveError('');
@@ -90,7 +101,7 @@ export function useAppData() {
           error instanceof Error ? error.message + ' Exporte um backup das alterações pendentes.' : 'Não foi possível salvar suas alterações. Exporte um backup para não perder dados.'
         );
         return false;
-      }
+      } finally { pendingSaves.current--; setSaving(pendingSaves.current > 0); }
     },
     []
   );
@@ -162,12 +173,13 @@ export function useAppData() {
   );
 
   const handleLock = useCallback(() => {
+    if (pendingSaves.current || saveError) { setError('Aguarde o salvamento ou exporte as alterações pendentes antes de bloquear.'); return; }
     markUnreadable(false);
     setPhase('locked');
     setData(null);
     setPin('');
     setError('');
-  }, [markUnreadable]);
+  }, [markUnreadable, saveError]);
 
   const handlePinChanged = useCallback((newPin: string) => {
     setPin(newPin);
@@ -222,7 +234,7 @@ export function useAppData() {
       return updateData((prev) => ({
         ...prev,
         shifts: prev.shifts.map((s) =>
-          s.id === id ? { ...s, ...shiftData, updatedAt: Date.now() } : s
+          s.id === id ? withHistory(s, shiftData) : s
         ),
       }));
     },
@@ -289,6 +301,7 @@ export function useAppData() {
     pin,
     error,
     saveError,
+    saving,
     clearSaveError,
     dataUnreadable,
     lockedSeconds,
@@ -308,4 +321,11 @@ export function useAppData() {
     setPhase,
     setError,
   };
+}
+
+function withHistory(before: Shift, changes: Partial<Shift>): Shift {
+  const after = { ...before, ...changes, updatedAt: Date.now() };
+  const relevant = (s: Shift) => `Total: R$ ${s.value.toFixed(2)}; recebido: R$ ${(s.payments ? s.payments.reduce((n, p) => n + p.amount, 0) : s.paid ? s.value : 0).toFixed(2)}; últimos 20 recebimentos: ${s.payments?.slice(-20).map(p => p.date + ': R$ ' + p.amount.toFixed(2)).join(', ') || 'sem registros individuais'}; vencimento: ${s.paymentDate || 'não definido'}; cobrança: ${s.collection?.status || 'não informada'}; último contato: ${s.collection?.lastContact || 'não informado'}; retorno: ${s.collection?.expectedDate || 'não informado'}; observação: ${s.collection?.note || ''}`;
+  if (relevant(before) !== relevant(after)) after.history = [...(before.history ?? []), { at: after.updatedAt, before: relevant(before), after: relevant(after) }].slice(-100);
+  return after;
 }

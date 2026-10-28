@@ -1,3 +1,4 @@
+import { normalizePayments } from '@/lib/receivables';
 import { useState, useEffect, useCallback } from 'react';
 import { Trash2, Save, Layers } from 'lucide-react';
 import type { Shift, ShiftTemplate, ServiceType, BillingUnit, Payment } from '@/types';
@@ -90,7 +91,7 @@ export function ShiftModal({
       setUnitValue(shift.unitValue !== undefined ? String(shift.unitValue) : '');
       setQuantity(shift.quantity !== undefined ? String(shift.quantity) : '');
       setPaymentDate(shift.paymentDate ?? '');
-      setPayments(shift.payments ?? (shift.paid && shift.value > 0 ? [{ id: crypto.randomUUID(), date: shift.paymentDate || shift.date, amount: shift.value }] : []));
+      setPayments(normalizePayments(shift));
       setNotes(shift.notes ?? '');
     } else {
       setType('plantao');
@@ -147,7 +148,11 @@ export function ShiftModal({
   const handleApplyTemplate = useCallback((tpl: ShiftTemplate) => {
     setLocation(tpl.location);
     setColor(tpl.color);
-    setHasTime(true);
+    setType(tpl.type ?? 'plantao');
+    setHasTime(tpl.hasTime !== false);
+    setBillingUnit(tpl.billingUnit ?? 'mes');
+    setUnitValue(tpl.unitValue === undefined ? '' : String(tpl.unitValue));
+    setQuantity(tpl.quantity === undefined ? '' : String(tpl.quantity));
     setStartTime(tpl.startTime);
     setEndTime(tpl.endTime);
     setValue(tpl.value !== undefined ? String(tpl.value) : '');
@@ -198,6 +203,7 @@ export function ShiftModal({
     if (busy) return;
     if (!location.trim()) return;
     const template = {
+      type, hasTime: timed, billingUnit: usesRate ? activeUnit : undefined, unitValue: usesRate ? unitNum : undefined, quantity: usesRate ? qtyNum : undefined,
       name: sanitizeString(timed ? `${location} ${startTime}-${endTime}` : location, 100),
       location: sanitizeString(location, 100),
       color,
@@ -210,7 +216,7 @@ export function ShiftModal({
     if (!validation.valid) { setErrors(validation.errors); return; }
     setBusy(true);
     try { await onSaveTemplate(template); } finally { setBusy(false); }
-  }, [location, timed, startTime, endTime, color, total, notes, onSaveTemplate, busy]);
+  }, [type, usesRate, activeUnit, unitNum, qtyNum, location, timed, startTime, endTime, color, total, notes, onSaveTemplate, busy]);
 
   return (
     <Modal
@@ -245,6 +251,7 @@ export function ShiftModal({
       }
     >
       {/* Modelos */}
+      {shift?.history?.length ? <details className="my-3 rounded border p-3"><summary>Histórico de recebimentos e cobranças</summary>{[...shift.history].reverse().map((h, i) => <div key={i} className="my-3 text-sm"><p>{new Date(h.at).toLocaleString('pt-BR')}</p><p className="break-words">Antes: {h.before}</p><p className="break-words">Depois: {h.after}</p></div>)}</details> : null}
       {templates.length > 0 && (
         <div className="mb-5">
           <div className={`mb-2 flex items-center gap-2 ${labelCls}`}>

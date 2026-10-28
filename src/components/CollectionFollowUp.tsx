@@ -8,7 +8,10 @@ export function CollectionFollowUp({ shift, onSave }: { shift: Shift; onSave: (i
   const [expectedDate, setExpectedDate] = useState(shift.collection?.expectedDate || '');
   const [status, setStatus] = useState<NonNullable<Shift['collection']>['status'] | ''>(shift.collection?.status || '');
   const [note, setNote] = useState(shift.collection?.note || '');
-  const [message, setMessage] = useState(`Olá! Tudo bem? Passando para lembrar do valor pendente de ${formatCurrency(outstanding(shift))} referente ao serviço realizado em ${formatDateBR(shift.date)}. Você tem uma previsão de pagamento?`);
+  const draft = `Olá! Tudo bem? Passando para lembrar do valor pendente de ${formatCurrency(outstanding(shift))} referente ao serviço realizado em ${formatDateBR(shift.date)}. Você tem uma previsão de pagamento?`;
+  const [message, setMessage] = useState(draft);
+  const [draftBasis, setDraftBasis] = useState(draft);
+  const stale = draftBasis !== draft;
   const [saved, setSaved] = useState('');
   const field = 'w-full rounded border border-slate-300 bg-white p-2 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-900 dark:text-white';
   return <details className="rounded-lg border border-slate-200 p-3 text-sm dark:border-slate-700">
@@ -21,6 +24,8 @@ export function CollectionFollowUp({ shift, onSave }: { shift: Shift; onSave: (i
       <button className="rounded bg-teal-700 px-3 py-2 text-white" type="submit">Salvar acompanhamento</button><span role="status">{saved}</span>
     </form>
     <label className="mt-3 block">Mensagem para revisar<textarea className={field} rows={4} value={message} onChange={e => setMessage(e.target.value)} /></label>
-    <a className="mt-2 inline-block underline" href={`https://wa.me/?text=${encodeURIComponent(message)}`} target="_blank" rel="noopener noreferrer">Abrir no WhatsApp</a><p className="mt-1 text-xs">Você escolhe o contato e confirma o envio no WhatsApp.</p>
+    {stale && <div role="alert" className="my-2 rounded border border-amber-500 p-2">O saldo ou a data mudou. Revise sua mensagem antes de enviar. <button type="button" className="underline" onClick={() => { if (message !== draftBasis && !confirm('Substituir sua mensagem personalizada pelo texto com o saldo atual?')) return; setMessage(draft); setDraftBasis(draft); }}>Atualizar com o saldo atual</button><button type="button" className="ml-3 underline" onClick={() => setDraftBasis(draft)}>Revisei e quero manter meu texto</button></div>}
+    {shift.history?.length ? <details className="my-2"><summary>Histórico de ajustes (últimos 100)</summary>{[...shift.history].reverse().map((h, i) => <div key={i} className="my-2"><p>{new Date(h.at).toLocaleString('pt-BR')}</p><p className="break-words">Antes: {h.before}</p><p className="break-words">Depois: {h.after}</p></div>)}</details> : null}
+    <a aria-disabled={stale} onClick={e => { if (stale) e.preventDefault(); }} className="mt-2 inline-block underline" href={`https://wa.me/?text=${encodeURIComponent(message)}`} target="_blank" rel="noopener noreferrer">Abrir no WhatsApp</a><p className="mt-1 text-xs">Você escolhe o contato e confirma o envio no WhatsApp.</p>
   </details>;
 }

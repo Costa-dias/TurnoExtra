@@ -28,3 +28,8 @@ export function conflicts(a: Pick<Shift, 'date' | 'startTime' | 'endTime' | 'has
   const x = interval(a), y = interval(b);
   return !!x && !!y && x[0] < y[1] && y[0] < x[1];
 }
+
+// Keep the exported legacy identity when opening an old service for editing.
+export function normalizePayments(s: Shift) {
+  return s.payments ?? (s.paid && s.value > 0 ? [{ id: 'legacy', date: s.paymentDate || s.date, amount: s.value, dateInferred: !s.paymentDate }] : []);
+}
