@@ -25,11 +25,11 @@ const STEPS = [
   },
   {
     title: 'Coloque os valores',
-    text: 'Digite o valor combinado de cada serviço. O app soma o total do mês e mostra quantos já foram pagos.',
+    text: 'Digite o valor combinado de cada serviço. O app soma o valor combinado no mês e distingue serviços quitados e recebimentos parciais.',
   },
   {
-    title: 'Marque se foi pago',
-    text: 'Abra o serviço e marque como pago, com a data do pagamento. O que não for marcado continua como a receber.',
+    title: 'Registre os recebimentos',
+    text: 'Abra o serviço, informe o valor recebido e a data e toque em Adicionar recebimento. Você pode registrar vários pagamentos parciais; o saldo continua a receber até a quitação. Salve o serviço para confirmar.',
   },
   {
     title: 'Faça seu backup',

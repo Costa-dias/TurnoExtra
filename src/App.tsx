@@ -116,9 +116,10 @@ function App() {
 
   const stats = useMemo(() => {
     const total = visibleShifts.length;
-    const paid = visibleShifts.filter((s) => s.paid).length;
+    const paid = visibleShifts.filter((s) => outstanding(s) === 0).length;
+    const partial = visibleShifts.filter((s) => received(s) > 0 && outstanding(s) > 0).length;
     const totalValue = visibleShifts.reduce((sum, s) => sum + s.value, 0);
-    return { total, paid, totalValue };
+    return { total, paid, partial, totalValue };
   }, [visibleShifts]);
 
   const handlePrevMonth = useCallback(() => {
@@ -430,8 +431,9 @@ function App() {
             icon={<CalendarDays size={16} className="text-amber-700 dark:text-amber-400" />}
           />
           <StatCard
-            label="Pago"
+            label="Quitados"
             value={`${stats.paid}/${stats.total}`}
+            detail={`Parciais: ${stats.partial}`}
             icon={<CalendarDays size={16} className="text-emerald-700 dark:text-emerald-400" />}
           />
         </div>
@@ -603,7 +605,9 @@ function StatCard({
   label,
   value,
   icon,
+  detail,
 }: {
+  detail?: string;
   label: string;
   value: string;
   icon: React.ReactNode;
@@ -615,6 +619,7 @@ function StatCard({
         <span className="text-xs text-slate-600 dark:text-slate-400">{label}</span>
       </div>
       <p className="truncate text-lg font-bold text-slate-900 dark:text-slate-100">{value}</p>
+      {detail && <p className="mt-1 text-xs text-slate-600 dark:text-slate-400">{detail}</p>}
     </div>
   );
 }
