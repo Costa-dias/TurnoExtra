@@ -1,4 +1,4 @@
-import { APP_VERSION } from '@/lib/appVersion';
+import { ReleaseVersion } from '../ReleaseVersion';
 
 interface SiteFooterProps {
   className?: string;
@@ -16,7 +16,7 @@ export function SiteFooter({ className = '' }: SiteFooterProps) {
       >
         Costa-Dias
       </a>
-      <span className="ml-2 whitespace-nowrap">v{APP_VERSION}</span>
+      <span className="ml-2"><ReleaseVersion /></span>
     </footer>
   );
 }
