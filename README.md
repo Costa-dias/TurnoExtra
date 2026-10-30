@@ -1,6 +1,6 @@
 # TURNO EXTRA — Agenda de serviços
 
-**Versão 2.0.0 · atualizado em 30/10/2026**
+**Versão 2.0.1 · atualizado em 30/10/2026**
 
 Evolução da agenda de plantões para gestão de serviços e recebimentos: pagamentos parciais, saldos, cobranças, conflitos na virada do dia e exportação revisada para o Dashboard.
 
@@ -83,3 +83,6 @@ npm run dev
 ## Transferência TurnoExtra → Dashboard
 
 No TurnoExtra: Configurações → Transferir recebimentos para o Dashboard. No Dashboard: Importar recebimentos do TurnoExtra → selecione o JSON → confira a prévia, conta e categoria → confirme. Somente recebimentos registrados são copiados, com identificadores estáveis. Repetidos são ignorados; alterações exigem seleção explícita e preservam conta/categoria existentes. Exclusões não se propagam automaticamente. Registros antigos sem data de pagamento usam a data do serviço e aparecem sinalizados para conferência. O arquivo é local e não criptografado, limitado a 5 MB; valores em BRL sem conversão. Não há sincronização automática.
+
+
+[Relatório detalhado da manutenção](docs/ATUALIZACOES_2026-10-30.md).

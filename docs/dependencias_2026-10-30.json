@@ -1,0 +1,33 @@
+{
+  "beforeVersion": "2.0.0",
+  "afterVersion": "2.0.1",
+  "directChanges": [
+    {
+      "library": "@types/node",
+      "before": "não incluído",
+      "after": "24.19.2",
+      "purpose": "Tipagem para desenvolvimento; não acrescenta recurso ao site."
+    },
+    {
+      "library": "@types/react",
+      "before": "18.3.11",
+      "after": "18.3.31",
+      "purpose": "Tipagem para desenvolvimento; não acrescenta recurso ao site."
+    },
+    {
+      "library": "@types/react-dom",
+      "before": "18.3.0",
+      "after": "18.3.7",
+      "purpose": "Tipagem para desenvolvimento; não acrescenta recurso ao site."
+    },
+    {
+      "library": "typescript-eslint",
+      "before": "8.72.0",
+      "after": "8.72.1",
+      "purpose": "Verifica código TypeScript e regras de qualidade."
+    }
+  ],
+  "removedDirect": [
+    "vite-plugin-pwa"
+  ]
+}
