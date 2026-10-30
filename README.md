@@ -1,5 +1,11 @@
 # TURNO EXTRA — Agenda de serviços
 
+**Versão 2.0.0 · atualizado em 30/10/2026**
+
+Evolução da agenda de plantões para gestão de serviços e recebimentos: pagamentos parciais, saldos, cobranças, conflitos na virada do dia e exportação revisada para o Dashboard.
+
+[Histórico e critérios da versão](RELEASES.md).
+
 Aplicativo web para anotar e controlar **plantões, serviços, horas extras e contratos**: calendário mensal, valores, pagamentos, relatórios e backup. Feito para quem presta serviços fora do horário habitual de trabalho, como profissionais de saúde, cooperados e freelancers.
 
 Os dados ficam **somente no seu aparelho**, protegidos por PIN. Não existe conta, servidor nem nuvem.
