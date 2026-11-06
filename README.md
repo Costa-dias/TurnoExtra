@@ -1,6 +1,6 @@
 # TURNO EXTRA — Agenda de serviços
 
-**Versão 2.0.1 · atualizado em 30/10/2026**
+**Versão 2.1.0 · atualizado em 06/11/2026**
 
 Evolução da agenda de plantões para gestão de serviços e recebimentos: pagamentos parciais, saldos, cobranças, conflitos na virada do dia e exportação revisada para o Dashboard.
 

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { Shift } from '@/types';
 import { formatCurrency, formatDateBR } from '@/lib/dateUtils';
 import { outstanding } from '@/lib/receivables';
+import { getTypeLabel } from '@/lib/shiftUtils';
 
 export function CollectionFollowUp({ shift, onSave }: { shift: Shift; onSave: (id: string, changes: Partial<Shift>) => Promise<boolean> }) {
   const [lastContact, setLastContact] = useState(shift.collection?.lastContact || '');
@@ -15,7 +16,7 @@ export function CollectionFollowUp({ shift, onSave }: { shift: Shift; onSave: (i
   const [saved, setSaved] = useState('');
   const field = 'w-full rounded border border-slate-300 bg-white p-2 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-900 dark:text-white';
   return <details className="rounded-lg border border-slate-200 p-3 text-sm dark:border-slate-700">
-    <summary className="cursor-pointer font-medium">{shift.location} · {formatCurrency(outstanding(shift))}{shift.collection?.expectedDate ? ` · Retorno: ${formatDateBR(shift.collection.expectedDate)}` : ''}{shift.collection?.status ? ` · ${shift.collection.status}` : ''}</summary>
+    <summary className="cursor-pointer font-medium">{shift.location} · {formatDateBR(shift.date)} · {getTypeLabel(shift)} · {formatCurrency(outstanding(shift))}{shift.collection?.expectedDate ? ` · Retorno: ${formatDateBR(shift.collection.expectedDate)}` : ''}{shift.collection?.status ? ` · ${shift.collection.status}` : ''}</summary>
     <form className="mt-3 grid gap-3" onSubmit={async e => { e.preventDefault(); const ok = await onSave(shift.id, { collection: { lastContact: lastContact || undefined, expectedDate: expectedDate || undefined, status: status || undefined, note: note.trim() || undefined } }); setSaved(ok ? 'Acompanhamento salvo.' : 'Não foi possível salvar.'); }}>
       <label>Último contato<input className={field} type="date" value={lastContact} onChange={e => setLastContact(e.target.value)} /></label>
       <label>Previsão de retorno ou pagamento<input className={field} type="date" value={expectedDate} onChange={e => setExpectedDate(e.target.value)} /></label>
