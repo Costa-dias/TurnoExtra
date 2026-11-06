@@ -1,3 +1,9 @@
+# Atualização 2.1.0 — 06/11/2026
+
+Período dos indicadores explícito e cobranças recolhidas com data e tipo do serviço.
+
+Dados existentes, formatos de backup e credenciais preservados. Alterações nesta rodada: apresentação e consulta; sem migração automática de dados.
+
 # Versão do produto
 
 **Versão 2.0.2 · atualizado em 31/10/2026**

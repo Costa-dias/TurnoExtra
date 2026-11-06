@@ -419,6 +419,7 @@ function App() {
         )}
 
         {/* Stats bar */}
+        <p className="mb-2 text-sm text-slate-600 dark:text-slate-400">Indicadores do mês selecionado: {new Date(year, month, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}. As cobranças abaixo incluem todos os períodos.</p>
         <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
           <StatCard
             label="Serviços"
@@ -426,7 +427,7 @@ function App() {
             icon={<CalendarDays size={16} className="text-teal-700 dark:text-teal-400" />}
           />
           <StatCard
-            label="Receita"
+            label="Valor dos serviços"
             value={formatCurrency(stats.totalValue)}
             icon={<CalendarDays size={16} className="text-amber-700 dark:text-amber-400" />}
           />
@@ -438,7 +439,8 @@ function App() {
           />
         </div>
 
-        <section className="my-5 rounded-xl border border-slate-200 p-4 dark:border-slate-700" aria-label="Cobranças de todos os períodos">
+        <details className="my-5 rounded-xl border border-slate-200 p-4 dark:border-slate-700">
+          <summary className="cursor-pointer font-semibold">Cobranças · todos os períodos · {data.shifts.filter(s => outstanding(s) > 0).length} pendentes · {formatCurrency(data.shifts.reduce((sum, s) => sum + outstanding(s), 0))} a receber</summary>
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="font-semibold">Cobranças · todos os períodos</h2>
             <Button variant="ghost" onClick={() => downloadBackup(buildCalendar(data.shifts), 'turnoextra-agenda.ics')}>Exportar agenda (.ics)</Button>
@@ -454,11 +456,11 @@ function App() {
           </div>
           <div className="mt-3 max-h-56 overflow-y-auto space-y-2">
             {data.shifts.filter(s => outstanding(s) > 0).sort((a, b) => (a.paymentDate || '9999').localeCompare(b.paymentDate || '9999')).map(s => <button key={s.id} onClick={() => handleSelectShift(s)} className="block w-full rounded-lg border border-slate-200 p-2 text-left text-sm dark:border-slate-700">
-              {s.location} · {formatCurrency(outstanding(s))} · {dueStatus(s)}{s.paymentDate ? ` (${formatDateBR(s.paymentDate)})` : ''} · {paymentStatus(s)}
+              {s.location} · {formatDateBR(s.date)} · {getTypeLabel(s)} · {formatCurrency(outstanding(s))} · {dueStatus(s)}{s.paymentDate ? ` (${formatDateBR(s.paymentDate)})` : ''} · {paymentStatus(s)}
             </button>)}
             {!data.shifts.some(s => outstanding(s) > 0) && <p className="text-sm">Nenhum recebimento pendente.</p>}
           </div>
-        </section>
+        </details>
 
         <MonthView
           year={year}
