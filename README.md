@@ -1,6 +1,18 @@
 # TURNO EXTRA — Agenda de serviços
 
-**Versão 2.1.0 · atualizado em 06/11/2026**
+**Versão 2.2.0 · atualizado em 07/11/2026**
+
+## Recursos da versão atual
+
+Agenda de serviços com recebimentos parciais, edição de recebimentos e exportação completa para conferência no Dashboard Finanças.
+
+- Para corrigir: abra o serviço, edite o recebimento, aplique a correção e salve o serviço. O identificador é preservado.
+- A exportação completa usa o formato versão 2 e pode conter zero recebimentos. Importe no Dashboard 2.2.0 ou posterior.
+- Dados ficam no navegador. A exportação de recebimentos não é criptografada e não sincroniza os aplicativos automaticamente.
+
+### Minha participação
+
+Projeto autoral desenvolvido com apoio de inteligência artificial. Minha participação inclui definir necessidades e fluxos, revisar as implementações, testar o funcionamento e orientar melhorias. As evidências e limitações estão descritas no projeto e no portfólio.
 
 Evolução da agenda de plantões para gestão de serviços e recebimentos: pagamentos parciais, saldos, cobranças, conflitos na virada do dia e exportação revisada para o Dashboard.
 
