@@ -86,3 +86,7 @@ No TurnoExtra: Configurações → Transferir recebimentos para o Dashboard. No 
 
 
 [Relatório detalhado da manutenção](docs/ATUALIZACOES_2026-10-30.md).
+
+## Recebimentos e conferência (2.2.0)
+
+Use Editar em um recebimento, aplique a correção e salve o serviço. O identificador é mantido; a reimportação no Dashboard atualizado aparece como alteração, não como uma receita nova. A exportação de recebimentos agora gera um arquivo completo versão 2, inclusive sem recebimentos. Atualize o Dashboard para 2.2.0 antes de importar. O JSON não é criptografado.

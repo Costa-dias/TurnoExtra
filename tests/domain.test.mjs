@@ -28,7 +28,14 @@ try {
   assert.equal(transfer.entries.length, 1); assert.equal(transfer.entries[0].amount, 200);
   assert.equal(transfer.entries[0].id, 'turnoextra:test:p1');
   assert.equal(transfer.entries[0].date, '2026-10-25');
-  assert.throws(() => financeTransfer([{ ...base, paid: false }]));
+  const emptySnapshot = JSON.parse(await financeTransfer([{ ...base, paid: false }]).text());
+  assert.equal(emptySnapshot.version, 2); assert.equal(emptySnapshot.scope, 'all-services'); assert.equal(emptySnapshot.entries.length, 0);
+  const { editPayment } = await server.ssrLoadModule('/src/lib/paymentEdit.ts');
+  const corrected = editPayment(partial.payments, 'p1', 150, '2026-10-24', 600, '2026-11-07');
+  assert.equal(corrected[0].id, 'p1'); assert.equal(corrected[0].amount, 150); assert.equal(partial.payments[0].amount, 200);
+  assert.equal(JSON.parse(await financeTransfer([{ ...partial, payments: corrected }]).text()).entries[0].id, transfer.entries[0].id);
+  for (const [amount, date] of [[0, '2026-10-24'], [601, '2026-10-24'], [10.001, '2026-10-24'], [100, '2026-02-30'], [100, '2026-12-01']]) assert.throws(() => editPayment(partial.payments, 'p1', amount, date, 600, '2026-11-07'));
+  assert.throws(() => editPayment(partial.payments, 'missing', 100, '2026-10-24', 600, '2026-11-07'));
   const followed = { ...data, shifts: [{ ...partial, collection: { lastContact: '2026-10-27', expectedDate: '2026-11-02', status: 'Aguardando retorno', note: 'Retornar na próxima semana' } }] };
   assert.equal(isValidBackupData(followed), true);
   assert.equal(isValidBackupData({ ...followed, shifts: [{ ...followed.shifts[0], collection: { expectedDate: '2026-02-30' } }] }), false);

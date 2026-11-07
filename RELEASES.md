@@ -1,3 +1,7 @@
+## 2.2.0 — 07/11/2026
+
+- Correção de recebimentos com identificador preservado e exportação completa para conferência no Dashboard.
+
 # Atualização 2.1.0 — 06/11/2026
 
 Período dos indicadores explícito e cobranças recolhidas com data e tipo do serviço.

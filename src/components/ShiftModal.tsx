@@ -1,3 +1,4 @@
+import { editPayment } from '@/lib/paymentEdit';
 import { normalizePayments } from '@/lib/receivables';
 import { useState, useEffect, useCallback } from 'react';
 import { Trash2, Save, Layers } from 'lucide-react';
@@ -71,6 +72,7 @@ export function ShiftModal({
   const [paymentDate, setPaymentDate] = useState('');
   const [payments, setPayments] = useState<Payment[]>([]);
   const [paymentAmount, setPaymentAmount] = useState('');
+  const [editingPayment, setEditingPayment] = useState<string | null>(null);
   const [receivedDate, setReceivedDate] = useState(toISODate(new Date()));
   const [notes, setNotes] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -110,6 +112,7 @@ export function ShiftModal({
       setPayments([]);
       setNotes('');
     }
+    setEditingPayment(null);
     setPaymentAmount('');
     setReceivedDate(toISODate(new Date()));
     setErrors({});
@@ -161,6 +164,7 @@ export function ShiftModal({
 
   const handleSave = useCallback(async () => {
     if (busy) return;
+    if (editingPayment) { setErrors({ payments: 'Aplique ou cancele a correção do recebimento antes de salvar o serviço.' }); return; }
     const data: Partial<Shift> = {
       type,
       location: sanitizeString(location, 100),
@@ -195,7 +199,7 @@ export function ShiftModal({
     } finally { setBusy(false); }
   }, [
     type, location, color, date, timed, startTime, endTime, total, usesRate,
-    activeUnit, unitNum, qtyNum, isContract, endDate, paymentDate, paid, payments, received, notes,
+    activeUnit, unitNum, qtyNum, isContract, endDate, paymentDate, paid, payments, received, notes, editingPayment,
     isEdit, shift, onUpdate, onSave, onClose, busy,
   ]);
 
@@ -477,19 +481,25 @@ export function ShiftModal({
           <p className="my-2 text-sm">Recebido: {formatCurrency(received)} · Saldo: {formatCurrency(Math.max(0, total - received))}</p>
           {payments.map(p => <div key={p.id} className="my-2 flex items-center justify-between gap-2 text-sm">
             <span>{formatDateBR(p.date)} · {formatCurrency(p.amount)}</span>
-            <button type="button" onClick={() => { if (confirm('Remover este recebimento?')) setPayments(payments.filter(x => x.id !== p.id)); }} aria-label="Remover recebimento">Remover</button>
+            <div className="flex gap-3"><button type="button" disabled={busy} onClick={() => { setEditingPayment(p.id); setPaymentAmount(String(p.amount)); setReceivedDate(p.date); setErrors({}); }} aria-label={`Editar recebimento de ${formatCurrency(p.amount)}`}>Editar</button><button type="button" disabled={busy} onClick={() => { if (confirm('Remover este recebimento?')) { setPayments(payments.filter(x => x.id !== p.id)); if (editingPayment === p.id) { setEditingPayment(null); setPaymentAmount(''); } } }} aria-label="Remover recebimento">Remover</button></div>
           </div>)}
           <div className="grid grid-cols-2 gap-2">
             <Input label="Valor recebido (R$)" type="number" min="0.01" step="0.01" value={paymentAmount} onChange={e => setPaymentAmount(e.target.value)} />
             <Input label="Recebido em" type="date" value={receivedDate} onChange={e => setReceivedDate(e.target.value)} />
           </div>
           <Button type="button" variant="ghost" onClick={() => {
+            if (editingPayment) {
+              try { setPayments(editPayment(payments, editingPayment, Number(paymentAmount), receivedDate, total, toISODate(new Date()))); setEditingPayment(null); setPaymentAmount(''); setErrors({}); }
+              catch (error) { setErrors({ payments: error instanceof Error ? error.message : 'Não foi possível corrigir.' }); }
+              return;
+            }
             const amount = Math.round(Number(paymentAmount) * 100) / 100;
             if (!Number.isFinite(amount) || amount <= 0 || amount > Math.round((total - received) * 100) / 100 || !/^\d{4}-\d{2}-\d{2}$/.test(receivedDate) || receivedDate > toISODate(new Date())) {
               setErrors({ payments: 'Informe um valor até o saldo e uma data de recebimento válida, até hoje.' }); return;
             }
             setPayments([...payments, { id: crypto.randomUUID(), amount, date: receivedDate }]); setPaymentAmount(''); setErrors({});
-          }}>Adicionar recebimento</Button>
+          }}>{editingPayment ? 'Aplicar correção do recebimento' : 'Adicionar recebimento'}</Button>
+          {editingPayment && <><p className="text-sm">A correção mantém a identificação do recebimento. Salve o serviço para concluir.</p><button type="button" onClick={() => { setEditingPayment(null); setPaymentAmount(''); setErrors({}); }}>Cancelar correção</button></>}
           {errors.payments && <p role="alert" className="text-sm text-red-600">{errors.payments}</p>}
         </div>
 
